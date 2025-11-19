@@ -1,980 +1,316 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Orçamento Gráfico • DIGRA</title>
-
 <style>
-  :root{
-    /* Tema azul/verde fechado (sem roxo) */
-    --bg1:#0a2040; --bg2:#0a2a3f; --bg3:#0b3141;
-    --brand1:#0b4f6c; --brand2:#1b9aaa; /* botões, detalhes */
-    --ok:#16a34a; --warn:#f59e0b; --danger:#e11d48;
-    --stroke:#e6e8ef; --muted:#77819a; --text:#1f2330;
-    --white:#fff; --card:#ffffffee;
-    --shadow:0 10px 30px rgba(8,18,35,.20);
-    --r:14px; --rsm:10px;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; color:var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
-    background:
-      radial-gradient(70% 90% at 0% -10%, #0a3155 0%, transparent 60%),
-      radial-gradient(70% 90% at 100% -10%, #0e5a6a 0%, transparent 60%),
-      linear-gradient(180deg, var(--bg1), var(--bg2) 55%, var(--bg3));
-    background-attachment: fixed;
-  }
-
-  /* LAYOUT CENTRALIZADO E MAIS ESTREITO */
-  .wrap{
-    max-width: 980px; /* mais estreito e elegante */
-    margin: 28px auto 120px;
-    padding: 0 16px;
-  }
-
-  /* HEADER em gradiente para título branco */
-  header.app{
-    background: linear-gradient(135deg, #0b4f6c, #0d6a7a);
-    color:#fff;
-    border-radius:12px; padding:14px 18px;
-    display:flex; gap:12px; align-items:center;
-    box-shadow: var(--shadow);
-  }
-  header.app h1{margin:0; font-weight:700; font-size:18px; color:#fff}
-  .logo-img{width:34px; height:34px; border-radius:50%; display:block; object-fit:cover; box-shadow:0 6px 18px rgba(10,20,35,.25)}
-  .logo-fallback{width:34px;height:34px;border-radius:50%;display:none;place-items:center;background:#0e7490;color:#fff;font-weight:800}
-
-  /* Cards */
-  .card{
-    background: var(--card);
-    border:1px solid var(--stroke);
-    border-radius: var(--r);
-    padding: 16px;
-    margin-top: 14px;
-    box-shadow: var(--shadow);
-  }
-
-  /* Tarja gradiente em TODOS os cards (azul) */
-  .card-header-bar{
-    margin: -6px -6px 14px -6px;
-    padding: 12px 14px;
-    border-radius: 10px;
-    background:
-      linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,.45)),
-      linear-gradient(135deg, #0b4f6c 0%, #0e6276 50%, #1483a1 100%);
-    border: 1px solid rgba(255,255,255,.55);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 2px 10px rgba(10,20,35,.16);
-    display:flex; align-items:center; gap:10px;
-  }
-  .card-header-bar .dot{
-    width:18px; height:18px; border-radius:50%; display:grid; place-items:center;
-    color:#0d6a7a; background:#fff; box-shadow:0 1px 4px rgba(10,20,35,.18); font-size:12px;
-  }
-  .card-header-bar .title{color:#ffffff; font-weight:800; letter-spacing:.2px; text-shadow:0 1px 1px rgba(0,0,0,.25)}
-
-  /* Grid */
-  .grid{display:grid; gap:14px}
-  .cols-2{grid-template-columns:1fr 1fr}
-  .cols-3{grid-template-columns:repeat(3,1fr)}
-  .cols-4{grid-template-columns:repeat(4,1fr)}
-  @media (max-width:980px){.cols-3,.cols-4{grid-template-columns:1fr 1fr}}
-  @media (max-width:680px){.cols-2,.cols-3,.cols-4{grid-template-columns:1fr}}
-
-  /* Inputs */
-  label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
-  input[type=text],input[type=number],textarea,select{
-    width:100%;padding:10px 12px;border:1px solid var(--stroke);border-radius:10px;background:#f7f9fc;outline:none
-  }
-  textarea{min-height:64px;resize:vertical}
-  input::placeholder,textarea::placeholder{color:#9aa3b5}
-
-  /* Botões */
-  .btn{
-    appearance:none;border:0;border-radius:12px;padding:12px 16px;
-    font-weight:800; cursor:pointer; color:#fff;
-    background: linear-gradient(135deg,#0b4f6c,#1b9aaa);
-    box-shadow: 0 6px 18px rgba(10,20,35,.16);
-  }
-  .btn.secondary{background:#eaf3f5; color:#0b4f6c; font-weight:700}
-  .btn.ghost{background:transparent;color:#0b4f6c;border:1px solid #d9e3e7}
-
-  /* OFFSET / DIGITAL (maiores, cores distintas ao ativar) */
-  .toggle{display:flex; gap:12px}
-  .toggle .btn{padding:14px 18px; font-size:14px}
-  .btn-mode.offset.active{background: linear-gradient(135deg,#d97706,#f59e0b)}   /* âmbar */
-  .btn-mode.digital.active{background: linear-gradient(135deg,#059669,#10b981)}  /* verde */
-  .tec-msg{margin-top:8px; font-size:12px; color:#0b4f6c; background:#e6f6f2; border:1px solid #b8efe1; padding:8px 10px; border-radius:8px; display:none}
-  .tec-msg.show{display:block}
-
-  /* Área de colagem: imagens DENTRO do quadro */
-  .dropzone{
-    border:2px dashed #9ac7d2; border-radius:12px; padding:22px; background:#f1f7f9;
-    color:#557a86; text-align:center; position:relative; min-height:160px;
-  }
-  .dz-hint{pointer-events:none}
-  .dz-grid{
-    display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap:10px; place-items:center; margin-top:10px;
-  }
-  .thumb{width:120px; height:120px; border-radius:10px; overflow:hidden; position:relative; background:#e2eef2; box-shadow:0 2px 10px rgba(10,20,35,.12)}
-  .thumb img{width:100%; height:100%; object-fit:cover}
-  .thumb button{position:absolute; top:6px; right:6px; background:rgba(0,0,0,.6); color:#fff; border:0; border-radius:8px; padding:4px 6px; cursor:pointer}
-
-  /* Tabelas */
-  table{width:100%; border-collapse:separate; border-spacing:0 8px}
-  thead th{font-size:12px; color:#6a7a8a; text-align:left; padding:0 10px}
-  tbody tr{background:#fff; box-shadow:0 2px 10px rgba(10,20,35,.10)}
-  tbody td{padding:8px 10px}
-
-  /* Resumo fixo + rodapé */
-  .summary{position:fixed; left:0; right:0; bottom:0; padding:8px 0 12px;
-    background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.18));
-    backdrop-filter: blur(6px); border-top:1px solid rgba(255,255,255,.25);
-  }
-  .summary .wrap{display:grid; grid-template-columns: repeat(7, 1fr) 300px; gap:10px}
-  .kpi{background:rgba(255,255,255,.92); border:1px solid var(--stroke); border-radius:12px; padding:8px; text-align:center}
-  .kpi .k{font-size:12px; color:#6f7b8c}
-  .kpi .v{font-size:16px; font-weight:800; margin-top:2px}
-  .right{display:flex; gap:10px; align-items:center; justify-content:flex-end}
-  .brand{font-weight:700; color:#0b4f6c}
-
-  /* Rodapé fixo de assinatura (sempre visível) */
-  .brand-bar{
-    position:fixed; left:0; right:0; bottom:72px; /* pouco acima do resumo */
-    text-align:center; color:#dce7eb; font-size:12px;
-  }
-
-  /* Impressão: mostrar KPIs e assinatura */
-  #printSummary{display:none}
-  @media print{
-    body{background:#fff}
-    .summary, .brand-bar, .drawer{display:none !important}
-    .wrap{margin:0; max-width:100%}
-    .card{box-shadow:none}
-    @page { size: A4; margin: 12mm }
-    #printSummary{display:block; margin-top:8mm}
-    #printSummary .kpis{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-    #printSummary .kpi{border:1px solid #cfd6de;border-radius:8px;padding:6px;text-align:center}
-    #printSummary .k{font-size:11px;color:#5b6676}
-    #printSummary .v{font-size:14px;font-weight:800;margin-top:2px}
-    #printSign{margin-top:6mm; text-align:center; font-size:12px; color:#0b4f6c}
-  }
+:root{--bg1:#26338C;--bg2:#8A30D8;--card:#fff;--bordas:#E5E9EF;--texto:#1E2A32;--texto-suave:#55637A;--prim:#3C6E91;--prim2:#4F7CAC;--offset:#F59E0B;--digital:#0E9F6E}
+body{margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--texto);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto}
+header{position:sticky;top:0;z-index:10}
+.header-pill{max-width:1100px;margin:16px auto;padding:12px 16px;background:#f5f7fb;border-radius:14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.logo{height:48px;pointer-events:none}
+.title{font-weight:800;font-size:18px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+main{max-width:1100px;margin:0 auto;padding:0 16px}
+.card{margin:16px 0;background:rgba(255,255,255,.96);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.35)}
+.card-h{padding:12px 16px;color:#3b4552;font-weight:800;display:flex;align-items:center;gap:8px}
+.card-b{padding:16px}
+main > section.card:first-of-type .card-h{color:#2a5c7c}
+main > section.card:first-of-type .row{gap:16px}
+.row{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.col-12{grid-column:span 12}.col-6{grid-column:span 6}.col-5{grid-column:span 5}.col-4{grid-column:span 4}.col-3{grid-column:span 3}
+label{font-weight:700;color:var(--texto-suave)}
+input,textarea,select{width:100%;padding:12px;border:1px solid #e0e6ef;border-radius:10px;background:#fff}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+.btn{appearance:none;border:1px solid var(--bordas);background:#fff;color:var(--texto);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700}
+.btn-primary{background:linear-gradient(135deg,var(--prim2),var(--prim));border:none;color:#fff}
+.btn-outline{background:#fff;color:var(--prim);border:2px solid var(--prim)}
+.tec-toggle{display:flex;gap:14px}
+#btnOffset,#btnDigital{display:flex;flex-direction:column;align-items:center;justify-content:center;width:148px;min-height:96px;border-radius:16px;border:2px solid #DCE3EA;background:#fff;color:#1e2a32;box-shadow:0 4px 10px rgba(0,0,0,.06);font-weight:800;letter-spacing:.2px;cursor:pointer;transition:all .18s ease}
+#btnOffset:hover,#btnDigital:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(0,0,0,.08)}
+#btnOffset.active{border-color:var(--offset);box-shadow:0 0 0 4px rgba(245,158,11,.15);color:#b45309}
+#btnDigital.active{border-color:var(--digital);box-shadow:0 0 0 4px rgba(14,159,110,.15);color:#047857}
+.tec-alert{margin-top:8px;padding:10px 12px;border-radius:12px;font-weight:700;display:none}
+.tec-alert.show{display:block}
+.selectline{display:grid;grid-template-columns:2fr 1.2fr 0.8fr 1fr 0.8fr 48px;gap:12px;align-items:center;margin:12px 0}
+.selectline select,.selectline input{height:44px}
+.del{background:#E74C3C;color:#fff;border:none;border-radius:10px;height:44px;cursor:pointer}
+/* Dropzone ajustada */
+.dropzone{min-height:420px;border:2px dashed #dfe6f3;border-radius:16px;background:#fbfdff;position:relative;color:#6b7890;display:flex;align-items:center;justify-content:center}
+.dropzone .dz-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px;opacity:.30;color:#2b3a55;font-weight:700;pointer-events:none;z-index:0}
+#thumbs{position:relative;z-index:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;width:100%;padding:12px;align-items:center}
+#thumbs .thumb{position:relative;width:100%;height:280px;background:#fff;border:1px solid #e6ecf4;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#thumbs .thumb img{max-width:100%;max-height:100%;object-fit:contain}
+#thumbs .thumb .remove{position:absolute;top:6px;right:6px;background:#e74c3c;color:#fff;border:none;border-radius:8px;padding:4px 8px;cursor:pointer}
+/* Resumo Financeiro com paleta do botão primário */
+.rf-card{background:linear-gradient(180deg,var(--prim2),var(--prim));border:1px solid rgba(255,255,255,.18)}
+.rf-card .card-h{color:#fff}
+.rf-card .kpi{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.18);border-radius:10px;padding:10px}
+.rf-card .kpi b{color:#eaf0ff}
+.rf-card .totals-bar{background:linear-gradient(135deg, rgba(255,255,255,0.20), rgba(255,255,255,0.12));border-top:0;border-radius:14px;padding:12px 16px;box-shadow:0 -8px 24px rgba(0,0,0,.25)}
+.rf-unit{margin-top:16px;background:linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.10));border:1px solid rgba(255,255,255,0.18);border-radius:14px;padding:16px;text-align:center;color:#fff}
+.rf-unit .lbl{display:block;font-weight:700;color:#eaf0ff;margin-bottom:4px}
+.rf-unit .val{font-weight:800;font-size:22px}
+.site-footer{text-align:center;color:#55637a;padding:24px 0}
+/* Impressão A4 */
+@media print{
+  @page{ size: A4 portrait; margin: 12mm; }
+  html, body{ background:#fff !important; }
+  header{ position:static; box-shadow:none; }
+  .header-pill{ box-shadow:none; background:#fff; border:1px solid #ddd; }
+  main{ max-width:100%; padding:0; }
+  .card{ break-inside: avoid; page-break-inside: avoid; box-shadow:none; border:1px solid #ddd; margin:10px 0; }
+  .rf-card{ color:#000; background:#fff; border:1px solid #ddd; }
+  .rf-card .kpi, .rf-card .totals-bar, .rf-unit{ background:#fff; color:#000; border:1px solid #ddd; }
+  .totals-bar{ position:static; box-shadow:none; }
+  .dropzone{ border:1px solid #ccc; min-height:380px; }
+  #thumbs .thumb{ height:260px; }
+  .btn, .toolbar button{ border:1px solid #999; color:#000 !important; background:#fff !important; }
+}
 </style>
 </head>
 <body>
-  <div class="wrap" id="printRoot">
-    <!-- HEADER -->
-   <header class="app">
-  <!-- LOGO (usa caminho relativo ./ na raiz do repo) -->
-  ./logo-digra.png
-  <div id="logoFallback" class="logo-fallback">DG</div>
-
-  <!-- Título -->
-  <h1>Orçamento Gráfico</h1>
-
-  <!-- Espaçador -->
-  <div style="flex:1"></div>
-
-  <!-- Botões -->
-  <button id="btnEditBase" class="btn secondary">⚙️ Valores Base</button>
-  <button id="btnPrint" class="btn">🖨️ Imprimir / Salvar PDF</button>
+<header>
+  <div class="header-pill">
+    <img class="logo" src="logo-digra.png" onerror="this.onerror=null;this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII='" alt="Logo DIGRA"/>
+    <span class="title">Orçamento Gráfico</span>
+    <div style="flex:1"></div>
+    <div class="toolbar">
+      <button id="btnEditBase" class="btn btn-primary">⚙️ Valores Base</button>
+      <button id="btnPrint" class="btn btn-outline">🖨️ Imprimir / Salvar PDF</button>
+    </div>
+  </div>
 </header>
-    
-    <!-- INFORMAÇÕES INICIAIS -->
-    <section class="card" id="cardInfo">
-      <div class="card-header-bar"><div class="dot">🧾</div><div class="title">Informações Iniciais</div></div>
-      <div class="grid cols-3">
-        <div>
-          <label>Quantidade Total de Itens *</label>
-          <input type="number" id="qtdItens" min="1" placeholder="ex.: 1000" />
-        </div>
-        <div>
-          <label>Tamanho Final do Produto *</label>
-          <input type="text" id="tamFinal" placeholder="ex.: 10x15cm" />
-        </div>
-        <div>
-          <label>Tecnologia de Impressão *</label>
-          <div class="toggle" role="group" aria-label="Tecnologia de Impressão">
-            <button class="btn btn-mode offset" id="btnOffset" type="button">⚙️ OFFSET</button>
-            <button class="btn btn-mode digital" id="btnDigital" type="button">🖨️ DIGITAL</button>
+
+<main>
+  <section class="card">
+    <div class="card-h">📑 Informações Iniciais</div>
+    <div class="card-b">
+      <div class="row">
+        <div class="col-3"><label>Quantidade Total de Itens *</label><input type="number" id="qtTotal" min="1" value="1"></div>
+        <div class="col-4"><label>Tamanho Final do Produto *</label><input type="text" id="tamanhoFinal" placeholder="Ex.: 210 × 297 mm (A4)"></div>
+        <div class="col-5"><label>Tecnologia de Impressão *</label>
+          <div class="tec-toggle">
+            <button type="button" id="btnOffset">⚙️ OFFSET</button>
+            <button type="button" id="btnDigital">🖨️ DIGITAL</button>
           </div>
-          <div id="tecMsg" class="tec-msg"></div>
+          <div id="tecAviso" class="tec-alert"></div>
         </div>
+        <div class="col-6"><label>Descrição do Serviço</label><textarea id="descricao"></textarea></div>
+        <div class="col-6"><label>Dados Técnicos</label><textarea id="dadosTecnicos"></textarea></div>
       </div>
-      <div class="grid cols-2" style="margin-top:10px">
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h">🖼️ Imagens do Projeto</div>
+    <div class="card-b">
+      <div id="dropzone" class="dropzone" tabindex="0">
+        <div class="dz-hint">📷 Clique aqui e cole suas imagens (Ctrl+V) • Você pode enviar múltiplas imagens</div>
+        <input id="fileSelect" type="file" accept="image/*" multiple style="display:none" />
+        <div id="thumbs"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h">📄 Papéis Utilizados</div>
+    <div class="card-b">
+      <div class="toolbar"><button id="btnAddPapel" class="btn btn-primary">+ Adicionar Papel</button></div>
+      <div id="areaPapeis"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h">🔧 Materiais Utilizados</div>
+    <div class="card-b">
+      <div class="toolbar">
+        <button id="btnAddMaterial" class="btn btn-primary">+ Adicionar Material</button>
+      </div>
+      <div id="areaMateriais"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h">🖨️ Impressão Digital</div>
+    <div class="card-b">
+      <div class="toolbar"><button id="btnAddImpressao" class="btn btn-primary">+ Adicionar Impressão</button></div>
+      <div id="areaImpressao"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h">👷 Mão de Obra</div>
+    <div class="card-b">
+      <div class="toolbar"><button id="btnAddMaoObra" class="btn btn-primary">+ Adicionar Profissional</button></div>
+      <div id="areaMaoObra"></div>
+    </div>
+  </section>
+
+  <section class="card rf-card">
+    <div class="card-h">💡 Resumo Financeiro</div>
+    <div class="card-b">
+      <div class="row">
+        <div class="col-3"><div class="kpi"><b>Papéis</b><span id="kpiPapeis">R$ 0,00</span></div></div>
+        <div class="col-3"><div class="kpi"><b>Materiais</b><span id="kpiMateriais">R$ 0,00</span></div></div>
+        <div class="col-3"><div class="kpi"><b>Impressão</b><span id="kpiImpressao">R$ 0,00</span></div></div>
+        <div class="col-3"><div class="kpi"><b>Mão de Obra</b><span id="kpiMaoObra">R$ 0,00</span></div></div>
+        <div class="col-3"><div class="kpi"><b>Acréscimo 10%</b><span id="kpiAcresc">R$ 0,00</span></div></div>
+        <div class="col-3"><div class="kpi"><b>TOTAL GERAL</b><span id="kpiTotal">R$ 0,00</span></div></div>
+        <div class="col-3"><div class="kpi"><b>Valor Unitário</b><span id="kpiUnit">R$ 0,00</span></div></div>
+        <div class="col-3"><div class="kpi"><b>Tecnologia</b><span id="kpiTec">DIGITAL</span></div></div>
+      </div>
+      <div class="rf-unit"><span class="lbl">Valor Unitário Final</span><div id="rfUnitFinal" class="val">R$ 0,00</div></div>
+    </div>
+    <div class="totals-bar">
+      <div class="toolbar" style="justify-content:space-between">
+        <div><strong>Total:</strong> <span id="stickyTotal">R$ 0,00</span> • Unitário: <b id="stickyUnit">R$ 0,00</b></div>
         <div>
-          <label>Descrição do Serviço</label>
-          <textarea id="desc" placeholder="ex.: Folder A4 4x4, 2 dobras, laminação fosca frente"></textarea>
+          <button class="btn btn-outline" id="btnPrint2">🖨️ Imprimir / Salvar em PDF</button>
+          <button class="btn btn-primary" id="btnEditBase2">⚙️ Editar Valores Base</button>
         </div>
-        <div>
-          <label>Dados Técnicos</label>
-          <textarea id="dadosTec" placeholder="ex.: Papel couchê 150g, tiragem 1000, faca 2a0b, etc."></textarea>
-        </div>
-      </div>
-    </section>
-
-    <!-- IMAGENS -->
-    <section class="card" id="cardImgs">
-      <div class="card-header-bar"><div class="dot">🖼️</div><div class="title">Imagens do Projeto</div></div>
-      <div class="dropzone" id="dropzone" tabindex="0">
-        <div class="dz-hint">
-          <div style="font-size:28px;margin-bottom:8px">🖼️</div>
-          <div><strong>Clique para ativar</strong> e cole suas imagens (Ctrl+V)</div>
-          <div style="font-size:12px; color:#6c8190">Aceita múltiplas imagens • também arraste e solte</div>
-        </div>
-        <div id="dzGrid" class="dz-grid"></div>
-      </div>
-    </section>
-
-    <!-- PAPÉIS -->
-    <section class="card" id="cardPapeis">
-      <div class="card-header-bar"><div class="dot">📄</div><div class="title">Papéis Utilizados</div></div>
-      <button class="btn ghost" type="button" id="addPapel">+ Adicionar Papel</button>
-      <table style="margin-top:12px">
-        <thead>
-          <tr>
-            <th style="width:28%">Papel</th>
-            <th style="width:14%">Tamanho</th>
-            <th style="width:12%">Qtd</th>
-            <th style="width:14%">R$ por unidade</th>
-            <th style="width:14%">Custo Total</th>
-            <th style="width:10%">Ações</th>
-          </tr>
-        </thead>
-        <tbody id="tblPapeis"></tbody>
-      </table>
-    </section>
-
-    <!-- MATERIAIS -->
-    <section class="card" id="cardMateriais">
-      <div class="card-header-bar"><div class="dot">🛠️</div><div class="title">Materiais Utilizados</div></div>
-      <button class="btn ghost" type="button" id="addMaterial">+ Adicionar Material</button>
-      <table style="margin-top:12px">
-        <thead>
-          <tr>
-            <th style="width:26%">Material</th>
-            <th style="width:20%">Tipo</th>
-            <th style="width:16%">Tamanho</th>
-            <th style="width:12%">Qtd</th>
-            <th style="width:14%">R$ unit.</th>
-            <th style="width:14%">Custo Total</th>
-            <th style="width:10%">Ações</th>
-          </tr>
-        </thead>
-        <tbody id="tblMateriais"></tbody>
-      </table>
-    </section>
-
-    <!-- IMPRESSÃO DIGITAL -->
-    <section class="card" id="cardImp">
-      <div class="card-header-bar"><div class="dot">🖨️</div><div class="title">Impressão Digital</div></div>
-      <button class="btn ghost" type="button" id="addImp">+ Adicionar Impressão</button>
-      <table style="margin-top:12px">
-        <thead>
-          <tr>
-            <th style="width:28%">Tipo</th>
-            <th style="width:14%">Formato</th>
-            <th style="width:12%">Qtd</th>
-            <th style="width:14%">R$ unit.</th>
-            <th style="width:14%">Custo Total</th>
-            <th style="width:10%">Ações</th>
-          </tr>
-        </thead>
-        <tbody id="tblImp"></tbody>
-      </table>
-    </section>
-
-    <!-- MÃO DE OBRA (por MINUTO) -->
-    <section class="card" id="cardMO">
-      <div class="card-header-bar"><div class="dot">👥</div><div class="title">Mão de Obra (minutos)</div></div>
-      <button class="btn ghost" type="button" id="addMao">+ Adicionar Profissional</button>
-      <table style="margin-top:12px">
-        <thead>
-          <tr>
-            <th style="width:30%">Profissional</th>
-            <th style="width:14%">Minutos</th>
-            <th style="width:14%">R$ / minuto</th>
-            <th style="width:14%">Custo Total</th>
-            <th style="width:10%">Ações</th>
-          </tr>
-        </thead>
-        <tbody id="tblMao"></tbody>
-      </table>
-    </section>
-
-    <!-- RESUMO PARA IMPRESSÃO -->
-    <div id="printSummary" class="card">
-      <div class="card-header-bar"><div class="dot">💡</div><div class="title">Resumo Financeiro</div></div>
-      <div class="kpis">
-        <div class="kpi"><div class="k">Papéis</div><div class="v" id="psPapeis">R$ 0,00</div></div>
-        <div class="kpi"><div class="k">Materiais</div><div class="v" id="psMateriais">R$ 0,00</div></div>
-        <div class="kpi"><div class="k">Impressão</div><div class="v" id="psImp">R$ 0,00</div></div>
-        <div class="kpi"><div class="k">Mão de Obra</div><div class="v" id="psMao">R$ 0,00</div></div>
-        <div class="kpi"><div class="k">Acrésc. 10%</div><div class="v" id="psAcresc">R$ 0,00</div></div>
-        <div class="kpi"><div class="k">TOTAL GERAL</div><div class="v" id="psTotal">R$ 0,00</div></div>
-        <div class="kpi"><div class="k">Valor Unitário</div><div class="v" id="psUnit">R$ 0,00</div></div>
-      </div>
-      <div id="printSign">⚡ Alexandre | DIGRA Apps</div>
-    </div>
-  </div>
-
-  <!-- RODAPÉ FIXO (assinatura) -->
-  <div class="brand-bar">⚡ Alexandre | DIGRA Apps</div>
-
-  <!-- BARRA RESUMO FIXA -->
-  <div class="summary">
-    <div class="wrap">
-      <div class="kpi"><div class="k">Papéis</div><div class="v" id="kpiPapeis">R$ 0,00</div></div>
-      <div class="kpi"><div class="k">Materiais</div><div class="v" id="kpiMateriais">R$ 0,00</div></div>
-      <div class="kpi"><div class="k">Impressão</div><div class="v" id="kpiImp">R$ 0,00</div></div>
-      <div class="kpi"><div class="k">Mão de Obra</div><div class="v" id="kpiMao">R$ 0,00</div></div>
-      <div class="kpi"><div class="k">Acrésc. 10%</div><div class="v" id="kpiAcresc">R$ 0,00</div></div>
-      <div class="kpi"><div class="k">TOTAL GERAL</div><div class="v" id="kpiTotal">R$ 0,00</div></div>
-      <div class="kpi"><div class="k">Valor Unitário</div><div class="v" id="kpiUnit">R$ 0,00</div></div>
-      <div class="right">
-        <span class="brand">⚡ Alexandre | DIGRA Apps</span>
-        <button class="btn secondary" id="btnEditBase2">⚙️ Valores Base</button>
-        <button class="btn" id="btnPrint2">🖨️ Imprimir</button>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- DRAWER: VALORES BASE -->
-  <div class="drawer" id="drawer" style="display:none;position:fixed;inset:0;background:rgba(10,20,35,.45)">
-    <div class="panel" style="margin-left:auto; width:min(880px,92%); height:100%; background:#fff; border-top-left-radius:18px; border-bottom-left-radius:18px; box-shadow:-8px 0 28px rgba(0,0,0,.25); display:flex; flex-direction:column;">
-      <div style="padding:16px;border-bottom:1px solid #e9edf2;display:flex;gap:12px;align-items:center">
-        <strong>⚙️ Valores Base e Configurações</strong>
-        <div style="flex:1"></div>
-        <button class="btn ghost" id="btnCloseDrawer">Fechar</button>
-      </div>
-      <div style="padding:16px;overflow:auto">
-        <div class="tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-          <button class="tab active" data-tab="papeis" style="padding:8px 12px;border-radius:999px;border:1px solid #d8e4ea;background:#eef6f8;color:#0b4f6c;font-weight:800;cursor:pointer">Papéis</button>
-          <button class="tab" data-tab="materiais" style="padding:8px 12px;border-radius:999px;border:1px solid #d8e4ea;background:#eef6f8;color:#0b4f6c;font-weight:800;cursor:pointer">Materiais</button>
-          <button class="tab" data-tab="imp" style="padding:8px 12px;border-radius:999px;border:1px solid #d8e4ea;background:#eef6f8;color:#0b4f6c;font-weight:800;cursor:pointer">Impressão Digital</button>
-          <button class="tab" data-tab="mao" style="padding:8px 12px;border-radius:999px;border:1px solid #d8e4ea;background:#eef6f8;color:#0b4f6c;font-weight:800;cursor:pointer">Mão de Obra</button>
-          <span style="flex:1"></span>
-          <button class="btn ghost" id="btnExport">Exportar JSON</button>
-          <label class="btn ghost" for="importJson" style="cursor:pointer;">Importar JSON</label>
-          <input id="importJson" type="file" accept="application/json" style="display:none"/>
+  <footer class="site-footer">⚡ Alexandre | DIGRA Apps</footer>
+</main>
+
+<!-- Modal Valores Base (restaurado) -->
+<dialog id="modalBase" style="width:960px; max-width: calc(100% - 24px); border:none; border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,.22);">
+  <form method="dialog" style="margin:0;">
+    <header style="padding:12px 16px; background: linear-gradient(135deg, #013a4a, #005366); color:#fff; border-top-left-radius:12px; border-top-right-radius:12px;"><strong>⚙️ Valores Base e Configurações</strong></header>
+    <section style="padding:16px; background:#fff; max-height:70vh; overflow:auto;">
+      <div class="toolbar" style="justify-content: space-between;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button type="button" class="btn" data-tab="papeis">Papéis</button>
+          <button type="button" class="btn" data-tab="materiais">Materiais</button>
+          <button type="button" class="btn" data-tab="impressao">Impressão Digital</button>
+          <button type="button" class="btn" data-tab="maoobra">Mão de Obra</button>
         </div>
-
-        <!-- PAPEIS -->
-        <section data-pane="papeis">
-          <div class="small" style="margin-bottom:8px">Valores por A4, A3, Folha 66×96 e Pacote.</div>
-          <table>
-            <thead><tr><th>Nome do Papel</th><th>R$ A4</th><th>R$ A3</th><th>R$ Folha</th><th>R$ Pacote</th><th>Folhas/Pacote</th><th>Ações</th></tr></thead>
-            <tbody id="basePapeis"></tbody>
-          </table>
-          <button class="btn ghost" id="baseAddPapel" style="margin-top:10px">+ Adicionar Papel</button>
-        </section>
-
-        <!-- MATERIAIS -->
-        <section data-pane="materiais" style="display:none">
-          <div class="small" style="margin-bottom:8px">“Tipo” possui nome e valor próprio (ex.: Espiral → 7mm, 9mm...).</div>
-          <table>
-            <thead><tr><th>Material</th><th>Tipos (nome → valor)</th><th>Ações</th></tr></thead>
-            <tbody id="baseMateriais"></tbody>
-          </table>
-          <button class="btn ghost" id="baseAddMaterial" style="margin-top:10px">+ Adicionar Material</button>
-        </section>
-
-        <!-- IMPRESSÃO DIGITAL -->
-        <section data-pane="imp" style="display:none">
-          <div class="small" style="margin-bottom:8px">Somente A4/A3. Tipos: PRETO (1 lado), PRETO (FRENTE E VERSO), COLORIDO (1 lado), COLORIDO (FRENTE E VERSO).</div>
-          <table>
-            <thead><tr><th>Tipo</th><th>Formato</th><th>R$ unit.</th><th>Ações</th></tr></thead>
-            <tbody id="baseImp"></tbody>
-          </table>
-          <button class="btn ghost" id="baseAddImp" style="margin-top:10px">+ Adicionar Impressão</button>
-        </section>
-
-        <!-- MÃO DE OBRA -->
-        <section data-pane="mao" style="display:none">
-          <div class="small" style="margin-bottom:8px">Informe valor por HORA. O sistema calcula por MINUTO automaticamente (hora ÷ 60).</div>
-          <table>
-            <thead><tr><th>Profissional</th><th>R$ por Hora</th><th>Ações</th></tr></thead>
-            <tbody id="baseMao"></tbody>
-          </table>
-          <button class="btn ghost" id="baseAddMao" style="margin-top:10px">+ Adicionar Profissional</button>
-        </section>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button type="button" class="btn" id="btnExport">Exportar JSON</button>
+          <label class="btn">Importar JSON<input type="file" id="fileImport" accept="application/json" style="display:none" /></label>
+        </div>
       </div>
-      <div style="padding:12px 16px;border-top:1px solid #e9edf2;display:flex;gap:10px;justify-content:flex-end">
-        <button class="btn secondary" id="btnResetBase">↺ Restaurar Padrões</button>
-        <button class="btn" id="btnSaveBase">💾 Salvar Alterações</button>
+      <div id="tab-papeis" class="tab">
+        <p style="color:#55637a">Ordem exigida: <b>A4, A3, Folha, Pacote</b> (editável). Ao alterar, reflete imediatamente nos cálculos e nas exportações.</p>
+        <table id="tblBasePapeis"><thead><tr><th>Nome do Papel</th><th>R$ A4</th><th>R$ A3</th><th>R$ Folha</th><th>R$ Pacote</th><th>Folhas/Pacote</th><th>Ações</th></tr></thead><tbody></tbody></table>
       </div>
-    </div>
-  </div>
+      <div id="tab-materiais" class="tab" hidden>
+        <table id="tblBaseMateriais"><thead><tr><th>Material</th><th>Tipos (nome → valor)</th><th>Ações</th></tr></thead><tbody></tbody></table>
+      </div>
+      <div id="tab-impressao" class="tab" hidden>
+        <table id="tblBaseImpressao"><thead><tr><th>Tipo</th><th>Formato</th><th>R$ unit.</th><th>Ações</th></tr></thead><tbody></tbody></table>
+      </div>
+      <div id="tab-maoobra" class="tab" hidden>
+        <table id="tblBaseMaoObra"><thead><tr><th>Profissional</th><th>R$ por Hora</th><th>Ações</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+    <footer style="padding:12px 16px; background:#f7f9fb; border-top:1px solid var(--bordas); display:flex; gap:8px; justify-content:flex-end;"><button type="submit" class="btn btn-ok" id="btnSalvarBase">💾 Salvar Alterações</button><button type="button" class="btn" id="btnFecharModal">Fechar</button></footer>
+  </form>
+</dialog>
+
+<script id="BASE_ORIGINAL" type="application/json">{"base": {"papeis": [{"nome": "Adesivo Fosco - 180g", "a4": 0.33, "a3": 0.74, "folha": 2.97, "pacote": 296.64, "folhasPacote": null}, {"nome": "Cartão Triplex - 250g", "a4": 0.35, "a3": 0.79, "folha": 3.17, "pacote": 475.0, "folhasPacote": null}, {"nome": "Cartolina Branca - 180g", "a4": 0.29, "a3": 0.57, "folha": 1.14, "pacote": 114.0, "folhasPacote": null}, {"nome": "Cartolina Branca - 240g", "a4": 0.24, "a3": 0.48, "folha": 0.95, "pacote": 95.0, "folhasPacote": null}, {"nome": "Couché 115g", "a4": 0.09, "a3": 0.19, "folha": 0.77, "pacote": 192.0, "folhasPacote": null}, {"nome": "Couché 150g", "a4": 0.08, "a3": 0.17, "folha": 0.68, "pacote": 169.45, "folhasPacote": null}, {"nome": "Couché 210g", "a4": 0.19, "a3": 0.43, "folha": 1.71, "pacote": 256.69, "folhasPacote": null}, {"nome": "Kraft 110g", "a4": 0.11, "a3": 0.24, "folha": 0.97, "pacote": 241.84, "folhasPacote": null}, {"nome": "Opaline 180g", "a4": 0.19, "a3": 0.42, "folha": 1.68, "pacote": 114.0, "folhasPacote": null}, {"nome": "Offset 75g", "a4": 0.06, "a3": 0.13, "folha": 0.53, "pacote": 132.0, "folhasPacote": null}, {"nome": "Offset 90g", "a4": 0.05, "a3": 0.12, "folha": 0.47, "pacote": 236.71, "folhasPacote": null}, {"nome": "Offset 120g", "a4": 0.09, "a3": 0.2, "folha": 0.8, "pacote": 200.01, "folhasPacote": null}, {"nome": "Vergê 80g", "a4": 0.04, "a3": 0.1, "folha": 0.39, "pacote": 98.64, "folhasPacote": null}, {"nome": "Vergê 180g", "a4": 0.12, "a3": 0.28, "folha": 1.12, "pacote": 139.49, "folhasPacote": null}], "materiais": [{"nome": "Laser Filme", "tipos": [{"nome": "A3 (por folha)", "valor": 3.57}, {"nome": "Ofício II (por folha)", "valor": 1.9}]}, {"nome": "Chapa Offset Positiva", "tipos": [{"nome": "SAKURAI", "valor": 7.58}, {"nome": "HEIDELBERG", "valor": 14.0}]}, {"nome": "Chapa Offset Térmica Digital (CTP)", "tipos": [{"nome": "SAKURAI", "valor": 57.0}, {"nome": "HEIDELBERG", "valor": 54.5}]}, {"nome": "Espiral", "tipos": [{"nome": "7 MM", "valor": 0.11}, {"nome": "9 MM", "valor": 0.13}, {"nome": "12 MM", "valor": 0.28}, {"nome": "14 MM", "valor": 0.36}, {"nome": "17 MM", "valor": 0.44}, {"nome": "20 MM", "valor": 0.64}, {"nome": "23 MM", "valor": 0.75}, {"nome": "25 MM", "valor": 0.98}, {"nome": "29 MM", "valor": 1.25}, {"nome": "33 MM", "valor": 1.52}, {"nome": "40 MM", "valor": 1.7}, {"nome": "45 MM", "valor": 2.37}, {"nome": "50 MM", "valor": 3.16}]}, {"nome": "Capa para Encadernação PP", "tipos": [{"nome": "Transparente", "valor": 0.4}, {"nome": "Preta", "valor": 0.3}]}, {"nome": "Fita Dupla Face", "tipos": [{"nome": "19 MM (por cm)", "valor": 0.005}, {"nome": "25 MM (por cm)", "valor": 0.0043}, {"nome": "50 MM (por cm)", "valor": 0.0086}]}, {"nome": "Bobina Polietileno (Plastificação)", "tipos": [{"nome": "34CM×0,05MM×60M (por cm)", "valor": 0.0342}]}, {"nome": "Adesivo Vinil", "tipos": [{"nome": "Preto (por metro)", "valor": 14.4}, {"nome": "Azul Médio (por metro)", "valor": 15.86}, {"nome": "Vermelho Médio (por metro)", "valor": 18.31}, {"nome": "Transparente (por metro)", "valor": 9.9}]}, {"nome": "Máscara de Transferência", "tipos": [{"nome": "Máscara (por metro)", "valor": 17.11}]}, {"nome": "Bolsa para Pastas", "tipos": [{"nome": "25×11", "valor": 0.27}]}], "impressoes": [{"tipo": "PRETO (1 lado)", "formato": "A4", "valor": 0.03}, {"tipo": "PRETO (1 lado)", "formato": "A3", "valor": 0.06}, {"tipo": "PRETO (FRENTE E VERSO)", "formato": "A4", "valor": 0.06}, {"tipo": "PRETO (FRENTE E VERSO)", "formato": "A3", "valor": 0.12}, {"tipo": "COLORIDO (1 lado)", "formato": "A4", "valor": 0.25}, {"tipo": "COLORIDO (1 lado)", "formato": "A3", "valor": 0.46}, {"tipo": "COLORIDO (FRENTE E VERSO)", "formato": "A4", "valor": 0.5}, {"tipo": "COLORIDO (FRENTE E VERSO)", "formato": "A3", "valor": 0.92}], "maoObra": [{"profissional": "COORDENADOR DE ARTES GRÁFICAS", "hora": 85.67}, {"profissional": "DESIGNER GRÁFICO", "hora": 65.0}, {"profissional": "ORÇAMENTISTA GRÁFICO", "hora": 41.37}, {"profissional": "MESTRE IMPRESSOR", "hora": 53.84}, {"profissional": "IMPRESSOR DIGITAL", "hora": 36.0}, {"profissional": "MESTRE IMPRESSOR OFFSET", "hora": 53.84}, {"profissional": "IMPRESSOR OFFSET", "hora": 36.0}, {"profissional": "OPERADOR DE GUILHOTINA", "hora": 36.0}, {"profissional": "MESTRE DE SERVIÇOS GRÁFICOS", "hora": 53.84}, {"profissional": "OPERADOR DE ACABAMENTO GRÁFICO", "hora": 36.0}, {"profissional": "ENCARREGADO", "hora": 53.84}]}}</script>
 
 <script>
 (function(){
-  const fmtBR = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
-  const $  = (sel, el=document) => el.querySelector(sel);
-  const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+  const BRL = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+  const fmt = v => BRL.format(Number(v||0));
+  const parseNum = v => { if(typeof v==='number') return v; if(!v) return 0; let s=(''+v).replace(/[^0-9,.-]/g,'').replace('.', '').replace(',', '.'); const n=parseFloat(s); return isNaN(n)?0:n; };
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
 
-  // ========= BASE OFICIAL (se precisar mudar, use ⚙️ ou Importar JSON) =========
-  const STORAGE = { base:'digra.base.v2' };
+  const LS_KEY = 'digra_orcamento_v1';
+  let state = { info:{ qtTotal:1, tec:'DIGITAL', descricao:'', dadosTecnicos:'' }, itens:{ papeis:[], materiais:[], impressoes:[], maoObra:[] }, imagens:[], base:{} };
+  try{ const raw=localStorage.getItem(LS_KEY); if(raw){ state = Object.assign(state, JSON.parse(raw)); } }catch(e){}
+  try{ const obj=JSON.parse(document.getElementById('BASE_ORIGINAL').textContent||'{}'); if(obj.base) state.base=obj.base; }catch(e){}
+  function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
 
-  const BASE_OFICIAL = {
-    papeis: [
-      {nome:'ADESIVO FOSCO 180g', a4:0.33, a3:0.74, folha:2.97, pacote:296.64, folhasPacote:500},
-      {nome:'CARTÃO TRIPLEX 250g', a4:0.35, a3:0.79, folha:3.17, pacote:475.00, folhasPacote:150},
-      {nome:'CARTOLINA BRANCA 180g', a4:0.29, a3:0.57, folha:1.14, pacote:114.00, folhasPacote:100},
-      {nome:'CARTOLINA BRANCA 240g', a4:0.24, a3:0.48, folha:0.95, pacote:95.00, folhasPacote:100},
-      {nome:'COUCHÊ 115g', a4:0.09, a3:0.19, folha:0.77, pacote:192.00, folhasPacote:250},
-      {nome:'COUCHÊ 150g', a4:0.08, a3:0.17, folha:0.68, pacote:169.45, folhasPacote:250},
-      {nome:'COUCHÊ 210g', a4:0.19, a3:0.43, folha:1.71, pacote:256.69, folhasPacote:150},
-      {nome:'KRAFT 110g', a4:0.11, a3:0.24, folha:0.97, pacote:241.84, folhasPacote:250},
-      {nome:'OPALINE 180g', a4:0.19, a3:0.42, folha:1.68, pacote:114.00, folhasPacote:100},
-      {nome:'OFFSET 75g', a4:0.06, a3:0.13, folha:0.53, pacote:132.00, folhasPacote:250},
-      {nome:'OFFSET 90g', a4:0.05, a3:0.12, folha:0.47, pacote:236.71, folhasPacote:500},
-      {nome:'OFFSET 120g', a4:0.09, a3:0.20, folha:0.80, pacote:200.01, folhasPacote:250},
-      {nome:'VERGÊ 80g', a4:0.04, a3:0.10, folha:0.39, pacote:98.64, folhasPacote:250},
-      {nome:'VERGÊ 180g', a4:0.12, a3:0.28, folha:1.12, pacote:139.49, folhasPacote:125}
-    ],
-    // Materiais: cada material tem uma lista de "tipos" (cada tipo tem seu próprio valor)
-    materiais: [
-      {nome:'LASER FILME', tipos:[
-        {nome:'A3 (29,7×42,0 cm) – por folha', valor:3.57},
-        {nome:'OFÍCIO II (21,6×33,0 cm) – por folha', valor:1.90}
-      ]},
-      {nome:'CHAPA OFFSET POSITIVA', tipos:[
-        {nome:'SAKURAI 400×520×0,30 mm (unidade)', valor:7.58},
-        {nome:'HEIDELBERG 459×525×0,15 mm (unidade)', valor:14.00}
-      ]},
-      {nome:'CHAPA OFFSET TÉRMICA DIGITAL (CTP)', tipos:[
-        {nome:'SAKURAI (unidade)', valor:57.00},
-        {nome:'HEIDELBERG (unidade)', valor:54.50}
-      ]},
-      {nome:'ESPIRAL (por unidade)', tipos:[
-        {nome:'7 mm', valor:0.11},{nome:'9 mm', valor:0.13},{nome:'12 mm', valor:0.28},
-        {nome:'14 mm', valor:0.36},{nome:'17 mm', valor:0.44},{nome:'20 mm', valor:0.64},
-        {nome:'23 mm', valor:0.75},{nome:'25 mm', valor:0.98},{nome:'29 mm', valor:1.25},
-        {nome:'33 mm', valor:1.52},{nome:'40 mm', valor:1.70},{nome:'45 mm', valor:2.37},{nome:'50 mm', valor:3.16}
-      ]},
-      {nome:'CAPA PP 0,30 (por unidade)', tipos:[
-        {nome:'Transparente', valor:0.40},
-        {nome:'Preta', valor:0.30}
-      ]},
-      {nome:'FITA DUPLA FACE (valor por cm)', tipos:[
-        {nome:'19 mm', valor:0.0050},
-        {nome:'25 mm', valor:0.0043},
-        {nome:'50 mm', valor:0.0086}
-      ]},
-      {nome:'BOBINA POLIETILENO 34cm × 0,05 mm × 60 m (valor por cm)', tipos:[
-        {nome:'Padrão', valor:0.0342}
-      ]},
-      {nome:'ADESIVO VINIL (valor por metro)', tipos:[
-        {nome:'Preto', valor:14.40},
-        {nome:'Azul Médio', valor:15.86},
-        {nome:'Vermelho Médio', valor:18.31},
-        {nome:'Transparente', valor:9.90},
-        {nome:'Máscara de Transferência', valor:17.11}
-      ]},
-      {nome:'BOLSA PARA PASTAS (unidade)', tipos:[
-        {nome:'25×11 – 240g + fita 19mm', valor:0.27}
-      ]}
-    ],
-    // Impressão digital (somente A4/A3) com tipos humanizados
-    imps: [
-      {tipo:'PRETO (1 lado)', formato:'A4', valor:0.03},
-      {tipo:'PRETO (1 lado)', formato:'A3', valor:0.06},
-      {tipo:'PRETO (FRENTE E VERSO)', formato:'A4', valor:0.06},
-      {tipo:'PRETO (FRENTE E VERSO)', formato:'A3', valor:0.12},
-      {tipo:'COLORIDO (1 lado)', formato:'A4', valor:0.25},
-      {tipo:'COLORIDO (1 lado)', formato:'A3', valor:0.46},
-      {tipo:'COLORIDO (FRENTE E VERSO)', formato:'A4', valor:0.50},
-      {tipo:'COLORIDO (FRENTE E VERSO)', formato:'A3', valor:0.92}
-    ],
-    // Mão de obra (hora) – cálculo por minuto na UI (hora / 60)
-    mao: [
-      {prof:'Coordenador de Artes Gráficas', valorHora:85.67},
-      {prof:'Designer Gráfico', valorHora:65.00},
-      {prof:'Orçamentista Gráfico', valorHora:41.37},
-      {prof:'Mestre Impressor', valorHora:53.84},
-      {prof:'Impressor Digital', valorHora:36.00},
-      {prof:'Mestre Impressor Offset', valorHora:53.84},
-      {prof:'Impressor Offset', valorHora:36.00},
-      {prof:'Operador de Guilhotina', valorHora:36.00},
-      {prof:'Mestre de Serviços Gráficos', valorHora:53.84},
-      {prof:'Operador de Acabamento Gráfico', valorHora:36.00},
-      {prof:'Encarregado', valorHora:53.84}
-    ]
-  };
+  function kpis(){ const tp=state.itens.papeis.reduce((s,r)=>s+r.qtd*r.unit,0); const tm=state.itens.materiais.reduce((s,r)=>s+r.qtd*r.unit,0); const ti=state.itens.impressoes.reduce((s,r)=>s+r.qtd*r.unit,0); const to=state.itens.maoObra.reduce((s,r)=>s+r.minutos*r.minuto,0); const sub=tp+tm+ti+to; const acresc=(state.info.tec==='OFFSET')? sub*0.10 : 0; const total=sub+acresc; const unit= total/Math.max(1, parseNum(state.info.qtTotal));
+    setT('kpiPapeis',fmt(tp)); setT('kpiMateriais',fmt(tm)); setT('kpiImpressao',fmt(ti)); setT('kpiMaoObra',fmt(to)); setT('kpiAcresc',fmt(acresc)); setT('kpiTotal',fmt(total)); setT('kpiUnit',fmt(unit)); setT('stickyTotal',fmt(total)); setT('stickyUnit',fmt(unit)); setT('kpiTec',state.info.tec); setT('rfUnitFinal',fmt(unit)); save(); }
+  function setT(id,val){ const el=document.getElementById(id); if(el) el.textContent=val; }
 
-  function loadBase(){
-    try{ return JSON.parse(localStorage.getItem(STORAGE.base)) || JSON.parse(JSON.stringify(BASE_OFICIAL)); }
-    catch(e){ return JSON.parse(JSON.stringify(BASE_OFICIAL)); }
+  // ===== Seleções =====
+  function addLinhaPapel(){ const wrap=document.createElement('div'); wrap.className='selectline'; const selP=document.createElement('select'); selP.innerHTML='<option value="">Selecione o tipo...</option>'+(state.base.papeis||[]).map((p,i)=>`<option value="${i}">${p.nome}</option>`).join(''); const selT=document.createElement('select'); selT.innerHTML='<option value="">Tamanho...</option><option>A4</option><option>A3</option><option>Folha</option><option>Pacote</option>'; const qtd=document.createElement('input'); qtd.type='number'; qtd.min='0'; qtd.placeholder='Qtd'; const unit=document.createElement('input'); unit.type='text'; unit.placeholder='Valor unit.'; unit.readOnly=true; const total=document.createElement('input'); total.type='text'; total.readOnly=true; total.value=fmt(0); const del=document.createElement('button'); del.className='del'; del.textContent='🗑️'; const item={ papel:null, tamanho:null, qtd:0, unit:0 };
+    function recalc(){ total.value=fmt(item.qtd*item.unit); kpis(); }
+    selP.onchange=()=>{ const p=state.base.papeis[parseInt(selP.value)]; item.papel=p? p.nome : null; if(p && item.tamanho){ const u=item.tamanho==='A4'?p.a4:item.tamanho==='A3'?p.a3:item.tamanho==='Pacote'?p.pacote:p.folha; item.unit=parseNum(u); unit.value=fmt(item.unit); recalc(); } };
+    selT.onchange=()=>{ item.tamanho=selT.value||null; const p=state.base.papeis[parseInt(selP.value)]; if(p && item.tamanho){ const u=item.tamanho==='A4'?p.a4:item.tamanho==='A3'?p.a3:item.tamanho==='Pacote'?p.pacote:p.folha; item.unit=parseNum(u); unit.value=fmt(item.unit); recalc(); } };
+    qtd.oninput=()=>{ item.qtd=parseNum(qtd.value); recalc(); };
+    del.onclick=()=>{ wrap.remove(); const i=state.itens.papeis.indexOf(item); if(i>-1) state.itens.papeis.splice(i,1); kpis(); };
+    wrap.append(selP, selT, qtd, unit, total, del); state.itens.papeis.push(item); return wrap; }
+
+  function addLinhaMaterial(){ const wrap=document.createElement('div'); wrap.className='selectline'; const selM=document.createElement('select'); selM.innerHTML='<option value="">Selecione material...</option>'+(state.base.materiais||[]).map((m,i)=>`<option value="${i}">${m.nome}</option>`).join(''); const selTipo=document.createElement('select'); selTipo.innerHTML='<option value="">Selecione o tipo...</option>'; const qtd=document.createElement('input'); qtd.type='number'; qtd.min='0'; qtd.placeholder='Qtd'; const unit=document.createElement('input'); unit.type='text'; unit.placeholder='Valor unit.'; unit.readOnly=true; const total=document.createElement('input'); total.type='text'; total.readOnly=true; total.value=fmt(0); const del=document.createElement('button'); del.className='del'; del.textContent='🗑️'; const item={ material:null, tipo:null, qtd:0, unit:0 };
+    function recalc(){ total.value=fmt(item.qtd*item.unit); kpis(); }
+    selM.onchange=()=>{ const m=state.base.materiais[parseInt(selM.value)]; item.material=m? m.nome:null; selTipo.innerHTML='<option value="">Selecione o tipo...</option>'+((m&&m.tipos)||[]).map((t,i)=>`<option value="${i}">${t.nome}</option>`).join(''); };
+    selTipo.onchange=()=>{ const m=state.base.materiais[parseInt(selM.value)]; const tip=((m&&m.tipos)||[])[parseInt(selTipo.value)]; item.tipo=tip? tip.nome:null; item.unit=parseNum(tip? tip.valor:0); unit.value=fmt(item.unit); recalc(); };
+    qtd.oninput=()=>{ item.qtd=parseNum(qtd.value); recalc(); };
+    del.onclick=()=>{ wrap.remove(); const i=state.itens.materiais.indexOf(item); if(i>-1) state.itens.materiais.splice(i,1); kpis(); };
+    wrap.append(selM, selTipo, qtd, unit, total, del); state.itens.materiais.push(item); return wrap; }
+
+  function addLinhaImpressao(){ const wrap=document.createElement('div'); wrap.className='selectline'; const tipos=[...new Set((state.base.impressoes||[]).map(i=>i.tipo))]; const selTipo=document.createElement('select'); selTipo.innerHTML='<option value="">Selecione o tipo de impressão...</option>'+tipos.map(t=>`<option>${t}</option>`).join(''); const selFormato=document.createElement('select'); selFormato.innerHTML='<option value="">Formato...</option>'; const qtd=document.createElement('input'); qtd.type='number'; qtd.min='0'; qtd.placeholder='Qtd'; const unit=document.createElement('input'); unit.type='text'; unit.placeholder='Valor unitário'; unit.readOnly=true; const total=document.createElement('input'); total.type='text'; total.readOnly=true; total.value=fmt(0); const del=document.createElement('button'); del.className='del'; del.textContent='🗑️'; const item={ tipo:null, formato:null, qtd:0, unit:0 };
+    function recalc(){ total.value=fmt(item.qtd*item.unit); kpis(); }
+    selTipo.onchange=()=>{ const tipo=selTipo.value||null; item.tipo=tipo; const formatos=(state.base.impressoes||[]).filter(i=>i.tipo===tipo).map(i=>i.formato); const uniq=[...new Set(formatos)]; selFormato.innerHTML='<option value="">Formato...</option>'+uniq.map(f=>`<option>${f}</option>`).join(''); };
+    selFormato.onchange=()=>{ const reg=(state.base.impressoes||[]).find(i=>i.tipo===item.tipo && i.formato===selFormato.value); item.formato=selFormato.value||null; item.unit=parseNum(reg? reg.valor:0); unit.value=fmt(item.unit); recalc(); };
+    qtd.oninput=()=>{ item.qtd=parseNum(qtd.value); recalc(); };
+    del.onclick=()=>{ wrap.remove(); const i=state.itens.impressoes.indexOf(item); if(i>-1) state.itens.impressoes.splice(i,1); kpis(); };
+    wrap.append(selTipo, selFormato, qtd, unit, total, del); state.itens.impressoes.push(item); return wrap; }
+
+  function addLinhaMaoObra(){ const wrap=document.createElement('div'); wrap.className='selectline'; const sel=document.createElement('select'); sel.innerHTML='<option value="">Profissional...</option>'+(state.base.maoObra||[]).map((o,i)=>`<option value="${i}">${o.profissional}</option>`).join(''); const spacer=document.createElement('div'); spacer.style.visibility='hidden'; spacer.textContent='—'; const minutos=document.createElement('input'); minutos.type='number'; minutos.min='0'; minutos.placeholder='Minutos'; const unit=document.createElement('input'); unit.type='text'; unit.placeholder='R$ / minuto'; unit.readOnly=true; const total=document.createElement('input'); total.type='text'; total.readOnly=true; total.value=fmt(0); const del=document.createElement('button'); del.className='del'; del.textContent='🗑️'; const item={ prof:null, minutos:0, minuto:0 };
+    function recalc(){ total.value=fmt(item.minutos*item.minuto); kpis(); }
+    sel.onchange=()=>{ const o=state.base.maoObra[parseInt(sel.value)]; item.prof=o? o.profissional:null; item.minuto=parseNum(o? o.hora:0)/60; unit.value=fmt(item.minuto); recalc(); };
+    minutos.oninput=()=>{ item.minutos=parseNum(minutos.value); recalc(); };
+    del.onclick=()=>{ wrap.remove(); const i=state.itens.maoObra.indexOf(item); if(i>-1) state.itens.maoObra.splice(i,1); kpis(); };
+    wrap.append(sel, spacer, minutos, unit, total, del); state.itens.maoObra.push(item); return wrap; }
+
+  // Binds
+  document.getElementById('btnAddPapel').onclick=()=>document.getElementById('areaPapeis').appendChild(addLinhaPapel());
+  document.getElementById('btnAddMaterial').onclick=()=>document.getElementById('areaMateriais').appendChild(addLinhaMaterial());
+  document.getElementById('btnAddImpressao').onclick=()=>document.getElementById('areaImpressao').appendChild(addLinhaImpressao());
+  document.getElementById('btnAddMaoObra').onclick=()=>document.getElementById('areaMaoObra').appendChild(addLinhaMaoObra());
+
+  // Tecnologia
+  const aviso=document.getElementById('tecAviso'), off=document.getElementById('btnOffset'), dig=document.getElementById('btnDigital');
+  function setTec(t){ state.info.tec=t; off.classList.toggle('active', t==='OFFSET'); dig.classList.toggle('active', t==='DIGITAL'); aviso.classList.add('show'); if(t==='OFFSET'){ aviso.textContent='Tecnologia Offset — acréscimo de 10% aplicado'; aviso.style.background='#fff3cd'; aviso.style.color='#7a5c00'; } else { aviso.textContent='Tecnologia Digital — isento dos 10%'; aviso.style.background='#d1fae5'; aviso.style.color='#065f46'; } kpis(); }
+  off.onclick=()=>setTec('OFFSET'); dig.onclick=()=>setTec('DIGITAL');
+
+  // Inputs iniciais
+  document.getElementById('qtTotal').oninput=e=>{ state.info.qtTotal=parseNum(e.target.value)||1; kpis(); };
+  document.getElementById('descricao').oninput=e=>{ state.info.descricao=e.target.value; save(); };
+  document.getElementById('dadosTecnicos').oninput=e=>{ state.info.dadosTecnicos=e.target.value; save(); };
+
+  // Imagens
+  const dz=document.getElementById('dropzone'); const fs=document.getElementById('fileSelect'); const thumbs=document.getElementById('thumbs');
+  let pasteActive=false;
+  function toBase64(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onerror=rej; fr.onload=()=>res(fr.result); fr.readAsDataURL(file); }); }
+  async function addImageFile(file){ if(!file || !file.type || !file.type.startsWith('image/')) return; const b64 = await toBase64(file); state.imagens.push(b64); renderThumbs(); save(); }
+  function renderThumbs(){ thumbs.innerHTML=''; (state.imagens||[]).forEach((src,idx)=>{ const d=document.createElement('div'); d.className='thumb'; const img=document.createElement('img'); img.src=src; d.appendChild(img); const rm=document.createElement('button'); rm.className='remove'; rm.textContent='✕'; rm.onclick=()=>{ state.imagens.splice(idx,1); renderThumbs(); save(); }; d.appendChild(rm); thumbs.appendChild(d); }); }
+  dz.addEventListener('click', ()=>{ pasteActive=true; fs.click(); });
+  fs.onchange=e=>{ const files=[...e.target.files]; files.forEach(addImageFile); fs.value=''; };
+  document.addEventListener('paste', e=>{ if(!pasteActive) return; const items=e.clipboardData && e.clipboardData.items; if(!items) return; for(const it of items){ if(it.kind==='file'){ addImageFile(it.getAsFile()); } } });
+
+  // Modal Valores Base
+  const modal=document.getElementById('modalBase');
+  function abrirValoresBase(){ renderBaseTables(); modal.showModal(); }
+  function renderBaseTables(){
+    const tbp=document.querySelector('#tblBasePapeis tbody'); tbp.innerHTML=''; (state.base.papeis||[]).forEach((r,idx)=>{ const tr=document.createElement('tr'); ['nome','a4','a3','folha','pacote','folhasPacote'].forEach(k=>{ const td=document.createElement('td'); const inp=document.createElement('input'); inp.value=r[k]??''; inp.type=(k==='nome')?'text':'number'; if(k!=='nome') inp.step='0.01'; inp.oninput=()=>{ r[k]=(k==='nome')?inp.value:parseNum(inp.value); save(); kpis(); }; td.appendChild(inp); tr.appendChild(td); }); const tdA=document.createElement('td'); const del=document.createElement('button'); del.className='btn'; del.textContent='Excluir'; del.onclick=()=>{ state.base.papeis.splice(idx,1); renderBaseTables(); save(); }; tdA.appendChild(del); tr.appendChild(tdA); tbp.appendChild(tr); });
+    const tbm=document.querySelector('#tblBaseMateriais tbody'); tbm.innerHTML=''; (state.base.materiais||[]).forEach((r,idx)=>{ const tr=document.createElement('tr'); const tdMat=document.createElement('td'); const inpMat=document.createElement('input'); inpMat.value=r.nome||''; inpMat.oninput=()=>{ r.nome=inpMat.value; save(); }; tdMat.appendChild(inpMat); const tdTipos=document.createElement('td'); const wrap=document.createElement('div'); (r.tipos||[]).forEach((t,i)=>{ const row=document.createElement('div'); row.style.display='grid'; row.style.gridTemplateColumns='1fr 120px 80px'; row.style.gap='6px'; row.style.margin='6px 0'; const n=document.createElement('input'); n.placeholder='Nome'; n.value=t.nome||''; n.oninput=()=>{ t.nome=n.value; save(); }; const v=document.createElement('input'); v.type='number'; v.step='0.01'; v.placeholder='R$'; v.value=t.valor||0; v.oninput=()=>{ t.valor=parseNum(v.value); save(); }; const rm=document.createElement('button'); rm.className='btn'; rm.textContent='-'; rm.onclick=()=>{ r.tipos.splice(i,1); renderBaseTables(); save(); }; row.append(n,v,rm); wrap.appendChild(row); }); const addT=document.createElement('button'); addT.className='btn btn-primary'; addT.textContent='+ Tipo'; addT.onclick=()=>{ (r.tipos=r.tipos||[]).push({nome:'',valor:0}); renderBaseTables(); save(); }; tdTipos.append(wrap, addT); const tdA=document.createElement('td'); const del=document.createElement('button'); del.className='btn'; del.textContent='Excluir'; del.onclick=()=>{ state.base.materiais.splice(idx,1); renderBaseTables(); save(); }; tr.append(tdMat, tdTipos, tdA); tdA.appendChild(del); tbm.appendChild(tr); });
+    const tbi=document.querySelector('#tblBaseImpressao tbody'); tbi.innerHTML=''; (state.base.impressoes||[]).forEach((r,idx)=>{ const tr=document.createElement('tr'); const tipo=document.createElement('input'); tipo.value=r.tipo||''; tipo.oninput=()=>{ r.tipo=tipo.value; save(); }; const formato=document.createElement('input'); formato.value=r.formato||''; formato.oninput=()=>{ r.formato=formato.value; save(); }; const val=document.createElement('input'); val.type='number'; val.step='0.01'; val.value=r.valor||0; val.oninput=()=>{ r.valor=parseNum(val.value); save(); }; const tdA=document.createElement('td'); const del=document.createElement('button'); del.className='btn'; del.textContent='Excluir'; del.onclick=()=>{ state.base.impressoes.splice(idx,1); renderBaseTables(); save(); }; tr.append(document.createElement('td'), document.createElement('td'), document.createElement('td'), tdA); tr.children[0].appendChild(tipo); tr.children[1].appendChild(formato); tr.children[2].appendChild(val); tdA.appendChild(del); tbi.appendChild(tr); });
+    const tbo=document.querySelector('#tblBaseMaoObra tbody'); tbo.innerHTML=''; (state.base.maoObra||[]).forEach((r,idx)=>{ const tr=document.createElement('tr'); const prof=document.createElement('input'); prof.value=r.profissional||''; prof.oninput=()=>{ r.profissional=prof.value; save(); }; const hora=document.createElement('input'); hora.type='number'; hora.step='0.01'; hora.value=r.hora||0; hora.oninput=()=>{ r.hora=parseNum(hora.value); save(); }; const tdA=document.createElement('td'); const del=document.createElement('button'); del.className='btn'; del.textContent='Excluir'; del.onclick=()=>{ state.base.maoObra.splice(idx,1); renderBaseTables(); save(); }; tr.append(document.createElement('td'), document.createElement('td'), tdA); tr.children[0].appendChild(prof); tr.children[1].appendChild(hora); tdA.appendChild(del); tbo.appendChild(tr); });
   }
-  function saveBase(b){ localStorage.setItem(STORAGE.base, JSON.stringify(b)); }
-  let base = loadBase();
+  document.getElementById('btnFecharModal').onclick=()=>modal.close();
+  document.getElementById('btnSalvarBase').onclick=()=>{ save(); modal.close(); kpis(); };
+  $$('#modalBase .btn[data-tab]').forEach(btn=>btn.onclick=()=>{ ['papeis','materiais','impressao','maoobra'].forEach(t=>{ document.getElementById('tab-'+t).hidden=(t!==btn.dataset.tab); }); });
+  document.getElementById('btnExport').onclick=()=>{ const blob=new Blob([ JSON.stringify(state.base, null, 2) ], {type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='valores-base.json'; a.click(); };
+  document.getElementById('fileImport').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const fr=new FileReader(); fr.onload=()=>{ try{ const obj=JSON.parse(fr.result); if(obj && (obj.papeis||obj.materiais||obj.impressoes||obj.maoObra)){ state.base=obj; save(); renderBaseTables(); kpis(); } }catch(err){} }; fr.readAsText(f); };
 
-  // ========= TECNOLOGIA =========
-  const tecMsg = $('#tecMsg');
-  function setTec(mode){
-    const off = $('#btnOffset'), dig = $('#btnDigital');
-    off.classList.toggle('active', mode==='OFFSET');
-    dig.classList.toggle('active', mode==='DIGITAL');
-    if(mode==='OFFSET'){
-      tecMsg.textContent = 'OFFSET selecionado: +10% sobre Papéis + Materiais.';
-      tecMsg.classList.add('show');
-    }else{
-      tecMsg.textContent = 'DIGITAL selecionado: isento do acréscimo de 10%.';
-      tecMsg.classList.add('show');
-    }
-    recalc();
-  }
-  $('#btnOffset').addEventListener('click', ()=> setTec('OFFSET'));
-  $('#btnDigital').addEventListener('click', ()=> setTec('DIGITAL'));
-  setTec('DIGITAL');
+  document.getElementById('btnPrint').onclick=()=>window.print();
+  document.getElementById('btnPrint2').onclick=()=>window.print();
+  document.getElementById('btnEditBase').onclick=()=>abrirValoresBase();
+  document.getElementById('btnEditBase2').onclick=()=>abrirValoresBase();
 
-  // ========= PAPÉIS =========
-  const elTblPapeis = $('#tblPapeis');
-  $('#addPapel').addEventListener('click', ()=> addRowPapel());
-
-  function addRowPapel(){
-    const tr = document.createElement('tr');
-    // Papel
-    const tdP = document.createElement('td'); const selP = document.createElement('select');
-    base.papeis.forEach(p=>{ const o=document.createElement('option'); o.value=p.nome; o.textContent=p.nome; selP.appendChild(o); });
-    tdP.appendChild(selP);
-    // Tamanho
-    const tdT = document.createElement('td'); const selT = document.createElement('select');
-    ['A4','A3','Folha','Pacote'].forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; selT.appendChild(o); });
-    tdT.appendChild(selT);
-    // Qtd
-    const tdQ = document.createElement('td'); const inQ = document.createElement('input'); inQ.type='number'; inQ.min='1'; inQ.placeholder='ex.: 100'; tdQ.appendChild(inQ);
-    // Valor
-    const tdV = document.createElement('td'); const inV = document.createElement('input'); inV.type='number'; inV.min='0'; inV.step='0.01'; inV.placeholder='R$'; tdV.appendChild(inV);
-    // Custo
-    const tdC = document.createElement('td'); tdC.textContent = fmtBR.format(0);
-    // Ações
-    const tdA = document.createElement('td'); const bt = document.createElement('button'); bt.className='btn ghost'; bt.textContent='Remover'; tdA.appendChild(bt);
-
-    tr.appendChild(tdP); tr.appendChild(tdT); tr.appendChild(tdQ); tr.appendChild(tdV); tr.appendChild(tdC); tr.appendChild(tdA);
-    elTblPapeis.appendChild(tr);
-
-    function syncUnit(){
-      const def = base.papeis.find(p=>p.nome===selP.value);
-      const key = selT.value.toLowerCase(); // a4,a3,folha,pacote
-      let unit = 0;
-      if(def && typeof def[key] === 'number') unit = def[key];
-      inV.value = unit ? unit.toFixed(2) : '';
-      update();
-    }
-    function update(){
-      const c = (parseFloat(inQ.value)||0) * (parseFloat(inV.value)||0);
-      tdC.textContent = fmtBR.format(c);
-      recalc();
-    }
-    selP.addEventListener('change', syncUnit);
-    selT.addEventListener('change', syncUnit);
-    inQ.addEventListener('input', update);
-    inV.addEventListener('input', update);
-    bt.addEventListener('click', ()=>{ tr.remove(); recalc(); });
-
-    // inicia com valores sugeridos
-    syncUnit();
-  }
-
-  // ========= MATERIAIS =========
-  const elTblMat = $('#tblMateriais');
-  $('#addMaterial').addEventListener('click', ()=> addRowMaterial());
-
-  function addRowMaterial(){
-    const tr = document.createElement('tr');
-
-    // Material
-    const tdM = document.createElement('td'); const selM = document.createElement('select');
-    base.materiais.forEach(m=>{ const o=document.createElement('option'); o.value=m.nome; o.textContent=m.nome; selM.appendChild(o); });
-    tdM.appendChild(selM);
-
-    // Tipo (dinâmico por material, cada tipo tem seu próprio valor)
-    const tdTipo = document.createElement('td'); const selTipo = document.createElement('select'); tdTipo.appendChild(selTipo);
-
-    // Tamanho (texto livre)
-    const tdTam = document.createElement('td'); const inTam = document.createElement('input'); inTam.type='text'; inTam.placeholder='ex.: 10x15, 2 cm, 3 m'; tdTam.appendChild(inTam);
-
-    // Qtd
-    const tdQ = document.createElement('td'); const inQ = document.createElement('input'); inQ.type='number'; inQ.min='1'; inQ.placeholder='ex.: 1'; tdQ.appendChild(inQ);
-
-    // Valor unit (vem do tipo escolhido, mas pode ser ajustado)
-    const tdV = document.createElement('td'); const inV = document.createElement('input'); inV.type='number'; inV.step='0.0001'; inV.min='0'; inV.placeholder='R$'; tdV.appendChild(inV);
-
-    // Custo
-    const tdC = document.createElement('td'); tdC.textContent = fmtBR.format(0);
-
-    // Ações
-    const tdA = document.createElement('td'); const bt = document.createElement('button'); bt.className='btn ghost'; bt.textContent='Remover'; tdA.appendChild(bt);
-
-    [tdM, tdTipo, tdTam, tdQ, tdV, tdC, tdA].forEach(td=> tr.appendChild(td));
-    elTblMat.appendChild(tr);
-
-    function fillTipos(){
-      selTipo.innerHTML='';
-      const def = base.materiais.find(m=>m.nome===selM.value);
-      const tipos = def?.tipos||[];
-      tipos.forEach(t=>{
-        const o = document.createElement('option');
-        o.value = t.nome; o.textContent = t.nome; o.dataset.valor = t.valor;
-        selTipo.appendChild(o);
-      });
-      syncValorTipo();
-    }
-    function syncValorTipo(){
-      const opt = selTipo.selectedOptions[0];
-      const v = opt ? Number(opt.dataset.valor||0) : 0;
-      inV.value = v ? v.toFixed(v<1 ? 4 : 2) : '';
-      update();
-    }
-    function update(){
-      const c = (parseFloat(inQ.value)||0) * (parseFloat(inV.value)||0);
-      tdC.textContent = fmtBR.format(c);
-      recalc();
-    }
-
-    selM.addEventListener('change', fillTipos);
-    selTipo.addEventListener('change', syncValorTipo);
-    inQ.addEventListener('input', update);
-    inV.addEventListener('input', update);
-    bt.addEventListener('click', ()=>{ tr.remove(); recalc(); });
-
-    fillTipos(); // inicial
-  }
-
-  // ========= IMPRESSÃO DIGITAL =========
-  const elTblImp = $('#tblImp');
-  $('#addImp').addEventListener('click', ()=> addRowImp());
-
-  function addRowImp(){
-    const tr = document.createElement('tr');
-
-    const tipos = [...new Set(base.imps.map(i=>i.tipo))];
-    const tdTipo = document.createElement('td'); const selTipo = document.createElement('select');
-    tipos.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; selTipo.appendChild(o); });
-    tdTipo.appendChild(selTipo);
-
-    const tdFmt = document.createElement('td'); const selFmt = document.createElement('select'); tdFmt.appendChild(selFmt);
-
-    const tdQ = document.createElement('td'); const inQ = document.createElement('input'); inQ.type='number'; inQ.min='1'; inQ.placeholder='ex.: 100'; tdQ.appendChild(inQ);
-    const tdV = document.createElement('td'); const inV = document.createElement('input'); inV.type='number'; inV.step='0.01'; inV.min='0'; inV.placeholder='R$'; tdV.appendChild(inV);
-    const tdC = document.createElement('td'); tdC.textContent = fmtBR.format(0);
-    const tdA = document.createElement('td'); const bt = document.createElement('button'); bt.className='btn ghost'; bt.textContent='Remover'; tdA.appendChild(bt);
-
-    [tdTipo, tdFmt, tdQ, tdV, tdC, tdA].forEach(td=> tr.appendChild(td));
-    elTblImp.appendChild(tr);
-
-    function fillFormatos(){
-      selFmt.innerHTML='';
-      const formatos = base.imps.filter(x=>x.tipo===selTipo.value).map(x=>x.formato).filter(f=>f==='A4'||f==='A3');
-      [...new Set(formatos)].forEach(f=>{ const o=document.createElement('option'); o.value=f; o.textContent=f; selFmt.appendChild(o); });
-      syncValor();
-    }
-    function syncValor(){
-      const it = base.imps.find(x=>x.tipo===selTipo.value && x.formato===selFmt.value);
-      inV.value = (it? it.valor:0).toFixed(2);
-      update();
-    }
-    function update(){
-      const c = (parseFloat(inV.value)||0) * (parseFloat(inQ.value)||0);
-      tdC.textContent = fmtBR.format(c);
-      recalc();
-    }
-
-    selTipo.addEventListener('change', fillFormatos);
-    selFmt.addEventListener('change', syncValor);
-    inQ.addEventListener('input', update);
-    inV.addEventListener('input', update);
-    bt.addEventListener('click', ()=>{ tr.remove(); recalc(); });
-
-    fillFormatos(); // inicial
-  }
-
-  // ========= MÃO DE OBRA (MINUTOS) =========
-  const elTblMao = $('#tblMao');
-  $('#addMao').addEventListener('click', ()=> addRowMao());
-
-  function addRowMao(){
-    const tr = document.createElement('tr');
-
-    const tdProf = document.createElement('td'); const selProf = document.createElement('select');
-    base.mao.forEach(m=>{ const o=document.createElement('option'); o.value=m.prof; o.textContent=m.prof; selProf.appendChild(o); });
-    tdProf.appendChild(selProf);
-
-    const tdMin = document.createElement('td'); const inMin = document.createElement('input'); inMin.type='number'; inMin.min='1'; inMin.placeholder='ex.: 30'; tdMin.appendChild(inMin);
-
-    const tdVmin = document.createElement('td'); const inVmin = document.createElement('input'); inVmin.type='number'; inVmin.step='0.01'; inVmin.min='0'; inVmin.placeholder='R$'; tdVmin.appendChild(inVmin);
-
-    const tdC = document.createElement('td'); tdC.textContent = fmtBR.format(0);
-    const tdA = document.createElement('td'); const bt = document.createElement('button'); bt.className='btn ghost'; bt.textContent='Remover'; tdA.appendChild(bt);
-
-    [tdProf, tdMin, tdVmin, tdC, tdA].forEach(td=> tr.appendChild(td));
-    elTblMao.appendChild(tr);
-
-    function syncValorMin(){
-      const def = base.mao.find(m=>m.prof===selProf.value);
-      const v = def ? (Number(def.valorHora||0)/60) : 0;
-      inVmin.value = v ? v.toFixed(2) : '';
-      update();
-    }
-    function update(){
-      const c = (parseFloat(inVmin.value)||0) * (parseFloat(inMin.value)||0);
-      tdC.textContent = fmtBR.format(c);
-      recalc();
-    }
-
-    selProf.addEventListener('change', syncValorMin);
-    inMin.addEventListener('input', update);
-    inVmin.addEventListener('input', update);
-    bt.addEventListener('click', ()=>{ tr.remove(); recalc(); });
-
-    syncValorMin(); // inicial
-  }
-
-  // ========= RESUMO / CÁLCULO =========
-  function recalc(){
-    const papelTotal = Array.from($('#tblPapeis').querySelectorAll('tr')).reduce((acc,tr)=>{
-      const qtd = parseFloat(tr.children[2].querySelector('input').value)||0;
-      const val = parseFloat(tr.children[3].querySelector('input').value)||0;
-      const c = qtd*val; tr.children[4].textContent = fmtBR.format(c); return acc + c;
-    },0);
-    const matTotal = Array.from($('#tblMateriais').querySelectorAll('tr')).reduce((acc,tr)=>{
-      const qtd = parseFloat(tr.children[3].querySelector('input').value)||0;
-      const val = parseFloat(tr.children[4].querySelector('input').value)||0;
-      const c = qtd*val; tr.children[5].textContent = fmtBR.format(c); return acc + c;
-    },0);
-    const impTotal = Array.from($('#tblImp').querySelectorAll('tr')).reduce((acc,tr)=>{
-      const qtd = parseFloat(tr.children[2].querySelector('input').value)||0;
-      const val = parseFloat(tr.children[3].querySelector('input').value)||0;
-      const c = qtd*val; tr.children[4].textContent = fmtBR.format(c); return acc + c;
-    },0);
-    const maoTotal = Array.from($('#tblMao').querySelectorAll('tr')).reduce((acc,tr)=>{
-      const min = parseFloat(tr.children[1].querySelector('input').value)||0;
-      const vmin= parseFloat(tr.children[2].querySelector('input').value)||0;
-      const c = min*vmin; tr.children[3].textContent = fmtBR.format(c); return acc + c;
-    },0);
-
-    const isOffset = $('#btnOffset').classList.contains('active');
-    const acresc = isOffset ? 0.10 * (papelTotal + matTotal) : 0;
-    const total = papelTotal + matTotal + impTotal + maoTotal + acresc;
-
-    $('#kpiPapeis').textContent = fmtBR.format(papelTotal);
-    $('#kpiMateriais').textContent = fmtBR.format(matTotal);
-    $('#kpiImp').textContent = fmtBR.format(impTotal);
-    $('#kpiMao').textContent = fmtBR.format(maoTotal);
-    $('#kpiAcresc').textContent = fmtBR.format(acresc);
-    $('#kpiTotal').textContent = fmtBR.format(total);
-
-    const itens = Math.max(1, parseInt($('#qtdItens').value||'0',10));
-    const unit = itens>0 ? (total / itens) : 0;
-    $('#kpiUnit').textContent = fmtBR.format(unit);
-
-    // preparar blocos de impressão
-    $('#psPapeis').textContent = fmtBR.format(papelTotal);
-    $('#psMateriais').textContent = fmtBR.format(matTotal);
-    $('#psImp').textContent = fmtBR.format(impTotal);
-    $('#psMao').textContent = fmtBR.format(maoTotal);
-    $('#psAcresc').textContent = fmtBR.format(acresc);
-    $('#psTotal').textContent = fmtBR.format(total);
-    $('#psUnit').textContent = fmtBR.format(unit);
-  }
-
-  // ========= COLAR / ARRASTAR IMAGENS (dentro do quadro) =========
-  const dz = $('#dropzone');
-  const dzGrid = $('#dzGrid');
-  let dzActive = false;
-
-  function addImg(url){
-    const div = document.createElement('div'); div.className='thumb';
-    const img = new Image(); img.src = url; div.appendChild(img);
-    const x = document.createElement('button'); x.textContent='✖'; x.title='Remover'; x.onclick=()=>div.remove();
-    div.appendChild(x); dzGrid.appendChild(div);
-  }
-
-  dz.addEventListener('click', ()=>{ dzActive = true; dz.focus(); dz.style.background='#e8f2f5'; setTimeout(()=> dz.style.background='#f1f7f9',300); });
-
-  document.addEventListener('paste', (e)=>{
-    if(!dzActive) return;
-    const items = e.clipboardData?.items||[];
-    const imgs = [...items].filter(it=> it.type && it.type.startsWith('image/'));
-    if(imgs.length){ e.preventDefault(); }
-    imgs.forEach(it=>{
-      const f = it.getAsFile(); if(!f) return;
-      const url = URL.createObjectURL(f);
-      addImg(url);
-    });
-  });
-  dz.addEventListener('dragover', e=>{ e.preventDefault(); });
-  dz.addEventListener('drop', e=>{
-    e.preventDefault(); dzActive = true;
-    const fs = e.dataTransfer.files;
-    for(const f of fs){ if(f.type.startsWith('image/')) addImg(URL.createObjectURL(f)); }
-  });
-
-  // ========= IMPRESSÃO =========
-  function printScaled(){
-    const root = document.getElementById('printRoot');
-    // medição A4
-    const probe = document.createElement('div');
-    probe.style.width='210mm'; probe.style.height='297mm'; probe.style.position='absolute'; probe.style.visibility='hidden';
-    document.body.appendChild(probe);
-    const a4h = probe.getBoundingClientRect().height; document.body.removeChild(probe);
-
-    const max = a4h*2 - 24; // 2 páginas
-    const h = root.getBoundingClientRect().height;
-    const scale = h>max ? (max/h) : 1;
-
-    const oldT = root.style.transform, oldO = root.style.transformOrigin;
-    root.style.transformOrigin = 'top center';
-    root.style.transform = 'scale('+scale+')';
-    setTimeout(()=>{ window.print(); setTimeout(()=>{ root.style.transform=oldT; root.style.transformOrigin=oldO; }, 100); }, 80);
-  }
-  $('#btnPrint').addEventListener('click', printScaled);
-  $('#btnPrint2').addEventListener('click', printScaled);
-
-  // ========= DRAWER (BASE) =========
-  const drawer = $('#drawer');
-  function openDrawer(){ renderBase(); drawer.style.display='flex'; }
-  function closeDrawer(){ drawer.style.display='none'; }
-  $('#btnEditBase').addEventListener('click', openDrawer);
-  $('#btnEditBase2').addEventListener('click', openDrawer);
-  $('#btnCloseDrawer').addEventListener('click', closeDrawer);
-
-  $$('.tab').forEach(tab=> tab.addEventListener('click', ()=>{
-    $$('.tab').forEach(t=>{
-      t.classList.remove('active');
-      t.style.background='#eef6f8';
-      t.style.color='#0b4f6c';
-    });
-    tab.classList.add('active');
-    tab.style.background='linear-gradient(135deg,#0b4f6c,#1b9aaa)';
-    tab.style.color='#fff';
-    const pane = tab.dataset.tab;
-    $$('[data-pane]').forEach(p=> p.style.display = (p.getAttribute('data-pane')===pane)?'block':'none');
-  }));
-
-  function renderBase(){
-    // Papéis
-    const tbP = $('#basePapeis'); tbP.innerHTML='';
-    base.papeis.forEach((p,idx)=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `
-        <td><input value="${p.nome}"></td>
-        <td><input type="number" step="0.01" value="${p.a4}"></td>
-        <td><input type="number" step="0.01" value="${p.a3}"></td>
-        <td><input type="number" step="0.01" value="${p.folha}"></td>
-        <td><input type="number" step="0.01" value="${p.pacote}"></td>
-        <td><input type="number" step="1" value="${p.folhasPacote||500}"></td>`;
-      const td=document.createElement('td'); const del=document.createElement('button'); del.className='btn ghost'; del.textContent='Remover'; del.onclick=()=>{ base.papeis.splice(idx,1); renderBase(); }; td.appendChild(del); tr.appendChild(td);
-      tbP.appendChild(tr);
-    });
-
-    // Materiais
-    const tbM = $('#baseMateriais'); tbM.innerHTML='';
-    base.materiais.forEach((m,idx)=>{
-      const tr=document.createElement('tr');
-      // editor simples: lista de tipos “nome=valor” separados por ;
-      const tiposStr = (m.tipos||[]).map(t=> `${t.nome}=${t.valor}`).join('; ');
-      tr.innerHTML = `
-        <td><input value="${m.nome}"></td>
-        <td><input value="${tiposStr}" placeholder="ex.: 7 mm=0.11; 9 mm=0.13; ..."></td>`;
-      const td=document.createElement('td'); const del=document.createElement('button'); del.className='btn ghost'; del.textContent='Remover'; del.onclick=()=>{ base.materiais.splice(idx,1); renderBase(); }; td.appendChild(del); tr.appendChild(td);
-      tbM.appendChild(tr);
-    });
-
-    // Impressão
-    const tbI = $('#baseImp'); tbI.innerHTML='';
-    base.imps.forEach((i,idx)=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `
-        <td><input value="${i.tipo}"></td>
-        <td><select><option ${i.formato==='A4'?'selected':''}>A4</option><option ${i.formato==='A3'?'selected':''}>A3</option></select></td>
-        <td><input type="number" step="0.01" value="${i.valor}"></td>`;
-      const td=document.createElement('td'); const del=document.createElement('button'); del.className='btn ghost'; del.textContent='Remover'; del.onclick=()=>{ base.imps.splice(idx,1); renderBase(); }; td.appendChild(del); tr.appendChild(td);
-      tbI.appendChild(tr);
-    });
-
-    // Mão de Obra
-    const tbO = $('#baseMao'); tbO.innerHTML='';
-    base.mao.forEach((o,idx)=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `
-        <td><input value="${o.prof}"></td>
-        <td><input type="number" step="0.01" value="${o.valorHora}"></td>`;
-      const td=document.createElement('td'); const del=document.createElement('button'); del.className='btn ghost'; del.textContent='Remover'; del.onclick=()=>{ base.mao.splice(idx,1); renderBase(); }; td.appendChild(del); tr.appendChild(td);
-      tbO.appendChild(tr);
-    });
-  }
-
-  // Ações base
-  $('#baseAddPapel').addEventListener('click',()=>{ base.papeis.push({nome:'Novo Papel', a4:0, a3:0, folha:0, pacote:0, folhasPacote:500}); renderBase(); });
-  $('#baseAddMaterial').addEventListener('click',()=>{ base.materiais.push({nome:'Novo Material', tipos:[]}); renderBase(); });
-  $('#baseAddImp').addEventListener('click',()=>{ base.imps.push({tipo:'PRETO (1 lado)', formato:'A4', valor:0}); renderBase(); });
-  $('#baseAddMao').addEventListener('click',()=>{ base.mao.push({prof:'Novo Profissional', valorHora:0}); renderBase(); });
-
-  $('#btnSaveBase').addEventListener('click', ()=>{
-    function readRows(sel){ return $$('#'+sel+' tr'); }
-    // Papéis
-    base.papeis = readRows('basePapeis').map(tr=>({
-      nome: tr.children[0].querySelector('input').value.trim(),
-      a4: Number(tr.children[1].querySelector('input').value||0),
-      a3: Number(tr.children[2].querySelector('input').value||0),
-      folha: Number(tr.children[3].querySelector('input').value||0),
-      pacote: Number(tr.children[4].querySelector('input').value||0),
-      folhasPacote: Number(tr.children[5].querySelector('input').value||0)||500
-    }));
-    // Materiais
-    base.materiais = readRows('baseMateriais').map(tr=>{
-      const nome = tr.children[0].querySelector('input').value.trim();
-      const raw = tr.children[1].querySelector('input').value.trim();
-      const tipos = raw.split(';').map(s=>s.trim()).filter(Boolean).map(pair=>{
-        const [n,v] = pair.split('=').map(x=>x.trim());
-        return {nome:n, valor: Number((v||'0').replace(',','.'))||0};
-      });
-      return {nome, tipos};
-    });
-    // Impressão
-    base.imps = readRows('baseImp').map(tr=>({
-      tipo: tr.children[0].querySelector('input').value.trim(),
-      formato: tr.children[1].querySelector('select').value,
-      valor: Number(tr.children[2].querySelector('input').value||0)
-    }));
-    // Mão de obra
-    base.mao = readRows('baseMao').map(tr=>({
-      prof: tr.children[0].querySelector('input').value.trim(),
-      valorHora: Number(tr.children[1].querySelector('input').value||0)
-    }));
-    saveBase(base);
-    alert('Valores base salvos.');
-  });
-
-  $('#btnResetBase').addEventListener('click', ()=>{
-    if(confirm('Restaurar toda a base oficial?')){
-      base = JSON.parse(JSON.stringify(BASE_OFICIAL));
-      saveBase(base); renderBase();
-    }
-  });
-
-  $('#btnExport').addEventListener('click', ()=>{
-    const data = JSON.stringify(base, null, 2);
-    const blob = new Blob([data], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href=url; a.download='digra-valores-base.json'; a.click(); URL.revokeObjectURL(url);
-  });
-
-  $('#importJson').addEventListener('change', (e)=>{
-    const file = e.target.files[0]; if(!file) return;
-    const rdr = new FileReader(); rdr.onload = ()=>{
-      try{ base = JSON.parse(rdr.result); saveBase(base); renderBase(); alert('Base importada com sucesso.'); }
-      catch(err){ alert('Arquivo inválido.'); }
-    }; rdr.readAsText(file);
-  });
-
-  // Inicial: não cria linhas automáticas; tudo começa em branco
-  recalc();
+  kpis();
 })();
 </script>
 </body>
