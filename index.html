@@ -1,91 +1,317 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Orçamento Gráfico</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Orçamento Gráfico • DIGRA</title>
 <style>
-    body {
-        margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    header {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #007BFF;
-        padding: 15px;
-    }
-    header img {
-        height: 50px;
-        margin-right: 10px;
-    }
-    header h1 {
-        color: #fff;
-        font-weight: bold;
-        font-size: 2.6em; /* 60% maior */
-        margin: 0;
-    }
-           max-width: 1200px;
-        margin: 20px auto;
-    }
-    .descricao-servico, .dados-tecnicos {
-        width: 90%;
-        max-width: 600px;
-        margin: 10px auto;
-        box-sizing: border-box;
-    }
-    .card {
-        background: #f9f9f9;
-        border: 1px solid #ddd;
-        padding: 10px;
-        margin-bottom: 15px;
-        border-radius: 5px;
-    }
-    @media print {
-        @page {
-            size: A4;
-            margin: 15mm;
-        }
-        body {
-            width: 100%;
-            margin: 0;
-            font-size: 12pt;
-        }
-        .container {
-            width: 100%;
-        }
-        img {
-            max-width: 100%;
-            height: auto;
-        }
-        .card, .descricao-servico, .dados-tecnicos {
-            page-break-inside: avoid;
-        }
-    }
+:root{--bg1:#26338C;--bg2:#8A30D8;--card:#fff;--bordas:#E5E9EF;--texto:#1E2A32;--texto-suave:#55637A;--prim:#3C6E91;--prim2:#4F7CAC;--offset:#F59E0B;--digital:#0E9F6E}
+body{margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--texto);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto}
+header{position:sticky;top:0;z-index:10}
+.header-pill{max-width:1100px;margin:16px auto;padding:12px 16px;background:#f5f7fb;border-radius:14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.logo{height:48px;pointer-events:none}
+.title{font-weight:800;font-size:18px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+main{max-width:1100px;margin:0 auto;padding:0 16px}
+.card{margin:16px 0;background:rgba(255,255,255,.96);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.35)}
+.card-h{padding:12px 16px;color:#3b4552;font-weight:800;display:flex;align-items:center;gap:8px}
+.card-b{padding:16px}
+main > section.card:first-of-type .card-h{color:#2a5c7c}
+main > section.card:first-of-type .row{gap:16px}
+.row{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.col-12{grid-column:span 12}.col-6{grid-column:span 6}.col-5{grid-column:span 5}.col-4{grid-column:span 4}.col-3{grid-column:span 3}
+label{font-weight:700;color:var(--texto-suave)}
+input,textarea,select{width:100%;padding:12px;border:1px solid #e0e6ef;border-radius:10px;background:#fff}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+.btn{appearance:none;border:1px solid var(--bordas);background:#fff;color:var(--texto);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700}
+.btn-primary{background:linear-gradient(135deg,var(--prim2),var(--prim));border:none;color:#fff}
+.btn-outline{background:#fff;color:var(--prim);border:2px solid var(--prim)}
+.tec-toggle{display:flex;gap:14px}
+#btnOffset,#btnDigital{display:flex;flex-direction:column;align-items:center;justify-content:center;width:148px;min-height:96px;border-radius:16px;border:2px solid #DCE3EA;background:#fff;color:#1e2a32;box-shadow:0 4px 10px rgba(0,0,0,.06);font-weight:800;letter-spacing:.2px;cursor:pointer;transition:all .18s ease}
+#btnOffset:hover,#btnDigital:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(0,0,0,.08)}
+#btnOffset.active{border-color:var(--offset);box-shadow:0 0 0 4px rgba(245,158,11,.15);color:#b45309}
+#btnDigital.active{border-color:var(--digital);box-shadow:0 0 0 4px rgba(14,159,110,.15);color:#047857}
+.tec-alert{margin-top:8px;padding:10px 12px;border-radius:12px;font-weight:700;display:none}
+.tec-alert.show{display:block}
+.selectline{display:grid;grid-template-columns:2fr 1.2fr 0.8fr 1fr 0.8fr 48px;gap:12px;align-items:center;margin:12px 0}
+.selectline select,.selectline input{height:44px}
+.del{background:#E74C3C;color:#fff;border:none;border-radius:10px;height:44px;cursor:pointer}
+/* Dropzone ajustada */
+.dropzone{min-height:420px;border:2px dashed #dfe6f3;border-radius:16px;background:#fbfdff;position:relative;color:#6b7890;display:flex;align-items:center;justify-content:center}
+.dropzone .dz-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px;opacity:.30;color:#2b3a55;font-weight:700;pointer-events:none;z-index:0}
+#thumbs{position:relative;z-index:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;width:100%;padding:12px;align-items:center}
+#thumbs .thumb{position:relative;width:100%;height:280px;background:#fff;border:1px solid #e6ecf4;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#thumbs .thumb img{max-width:100%;max-height:100%;object-fit:contain}
+#thumbs .thumb .remove{position:absolute;top:6px;right:6px;background:#e74c3c;color:#fff;border:none;border-radius:8px;padding:4px 8px;cursor:pointer}
+/* Resumo Financeiro com paleta do botão primário */
+.rf-card{background:linear-gradient(180deg,var(--prim2),var(--prim));border:1px solid rgba(255,255,255,.18)}
+.rf-card .card-h{color:#fff}
+.rf-card .kpi{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.18);border-radius:10px;padding:10px}
+.rf-card .kpi b{color:#eaf0ff}
+.rf-card .totals-bar{background:linear-gradient(135deg, rgba(255,255,255,0.20), rgba(255,255,255,0.12));border-top:0;border-radius:14px;padding:12px 16px;box-shadow:0 -8px 24px rgba(0,0,0,.25)}
+.rf-unit{margin-top:16px;background:linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.10));border:1px solid rgba(255,255,255,0.18);border-radius:14px;padding:16px;text-align:center;color:#fff}
+.rf-unit .lbl{display:block;font-weight:700;color:#eaf0ff;margin-bottom:4px}
+.rf-unit .val{font-weight:800;font-size:22px}
+.site-footer{text-align:center;color:#55637a;padding:24px 0}
+/* Impressão A4 */
+@media print{
+  @page{ size: A4 portrait; margin: 12mm; }
+  html, body{ background:#fff !important; }
+  header{ position:static; box-shadow:none; }
+  .header-pill{ box-shadow:none; background:#fff; border:1px solid #ddd; }
+  main{ max-width:100%; padding:0; }
+  .card{ break-inside: avoid; page-break-inside: avoid; box-shadow:none; border:1px solid #ddd; margin:10px 0; }
+  .rf-card{ color:#000; background:#fff; border:1px solid #ddd; }
+  .rf-card .kpi, .rf-card .totals-bar, .rf-unit{ background:#fff; color:#000; border:1px solid #ddd; }
+  .totals-bar{ position:static; box-shadow:none; }
+  .dropzone{ border:1px solid #ccc; min-height:380px; }
+  #thumbs .thumb{ height:260px; }
+  .btn, .toolbar button{ border:1px solid #999; color:#000 !important; background:#fff !important; }
+}
 </style>
 </head>
 <body>
 <header>
-    logo.png
-    <h1>Orçamento Gráfico</h1>
+  <div class="header-pill">
+    <img class="logo" src="logo-digra.png" onerror="this.onerror=null;this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII='" alt="Logo DIGRA"/>
+    <span class="title">Orçamento Gráfico</span>
+    <div style="flex:1"></div>
+    <div class="toolbar">
+      <button id="btnEditBase" class="btn btn-primary">⚙️ Valores Base</button>
+      <button id="btnPrint" class="btn btn-outline">🖨️ Imprimir / Salvar PDF</button>
+    </div>
+  </div>
 </header>
 
-<div class="container">
-    <!-- Conteúdo original do app -->
-    <div class="card descricao-servico">
-        <h2>Descrição do Serviço</h2>
-        <!-- conteúdo original -->
+<main>
+  <section class="card">
+    <div class="card-h">📑 Informações Iniciais</div>
+    <div class="card-b">
+      <div class="row">
+        <div class="col-3"><label>Quantidade Total de Itens *</label><input type="number" id="qtTotal" min="1" value="1"></div>
+        <div class="col-4"><label>Tamanho Final do Produto *</label><input type="text" id="tamanhoFinal" placeholder="Ex.: 210 × 297 mm (A4)"></div>
+        <div class="col-5"><label>Tecnologia de Impressão *</label>
+          <div class="tec-toggle">
+            <button type="button" id="btnOffset">⚙️ OFFSET</button>
+            <button type="button" id="btnDigital">🖨️ DIGITAL</button>
+          </div>
+          <div id="tecAviso" class="tec-alert"></div>
+        </div>
+        <div class="col-6"><label>Descrição do Serviço</label><textarea id="descricao"></textarea></div>
+        <div class="col-6"><label>Dados Técnicos</label><textarea id="dadosTecnicos"></textarea></div>
+      </div>
     </div>
-    <div class="card dados-tecnicos">
-        <h2>Dados Técnicos</h2>
-        <!-- conteúdo original -->
+  </section>
+
+  <section class="card">
+    <div class="card-h">🖼️ Imagens do Projeto</div>
+    <div class="card-b">
+      <div id="dropzone" class="dropzone" tabindex="0">
+        <div class="dz-hint">📷 Clique aqui e cole suas imagens (Ctrl+V) • Você pode enviar múltiplas imagens</div>
+        <input id="fileSelect" type="file" accept="image/*" multiple style="display:none" />
+        <div id="thumbs"></div>
+      </div>
     </div>
-    <!-- Continue com os demais cards e lógica original -->
-</div>
+  </section>
+
+  <section class="card">
+    <div class="card-h">📄 Papéis Utilizados</div>
+    <div class="card-b">
+      <div class="toolbar"><button id="btnAddPapel" class="btn btn-primary">+ Adicionar Papel</button></div>
+      <div id="areaPapeis"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h">🔧 Materiais Utilizados</div>
+    <div class="card-b">
+      <div class="toolbar">
+        <button id="btnAddMaterial" class="btn btn-primary">+ Adicionar Material</button>
+      </div>
+      <div id="areaMateriais"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h">🖨️ Impressão Digital</div>
+    <div class="card-b">
+      <div class="toolbar"><button id="btnAddImpressao" class="btn btn-primary">+ Adicionar Impressão</button></div>
+      <div id="areaImpressao"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h">👷 Mão de Obra</div>
+    <div class="card-b">
+      <div class="toolbar"><button id="btnAddMaoObra" class="btn btn-primary">+ Adicionar Profissional</button></div>
+      <div id="areaMaoObra"></div>
+    </div>
+  </section>
+
+  <section class="card rf-card">
+    <div class="card-h">💡 Resumo Financeiro</div>
+    <div class="card-b">
+      <div class="row">
+        <div class="col-3"><div class="kpi"><b>Papéis</b><span id="kpiPapeis">R$ 0,00</span></div></div>
+        <div class="col-3"><div class="kpi"><b>Materiais</b><span id="kpiMateriais">R$ 0,00</span></div></div>
+        <div class="col-3"><div class="kpi"><b>Impressão</b><span id="kpiImpressao">R$ 0,00</span></div></div>
+        <div class="col-3"><div class="kpi"><b>Mão de Obra</b><span id="kpiMaoObra">R$ 0,00</span></div></div>
+        <div class="col-3"><div class="kpi"><b>Acréscimo 10%</b><span id="kpiAcresc">R$ 0,00</span></div></div>
+        <div class="col-3"><div class="kpi"><b>TOTAL GERAL</b><span id="kpiTotal">R$ 0,00</span></div></div>
+        <div class="col-3"><div class="kpi"><b>Valor Unitário</b><span id="kpiUnit">R$ 0,00</span></div></div>
+        <div class="col-3"><div class="kpi"><b>Tecnologia</b><span id="kpiTec">DIGITAL</span></div></div>
+      </div>
+      <div class="rf-unit"><span class="lbl">Valor Unitário Final</span><div id="rfUnitFinal" class="val">R$ 0,00</div></div>
+    </div>
+    <div class="totals-bar">
+      <div class="toolbar" style="justify-content:space-between">
+        <div><strong>Total:</strong> <span id="stickyTotal">R$ 0,00</span> • Unitário: <b id="stickyUnit">R$ 0,00</b></div>
+        <div>
+          <button class="btn btn-outline" id="btnPrint2">🖨️ Imprimir / Salvar em PDF</button>
+          <button class="btn btn-primary" id="btnEditBase2">⚙️ Editar Valores Base</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">⚡ Alexandre | DIGRA Apps</footer>
+</main>
+
+<!-- Modal Valores Base (restaurado) -->
+<dialog id="modalBase" style="width:960px; max-width: calc(100% - 24px); border:none; border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,.22);">
+  <form method="dialog" style="margin:0;">
+    <header style="padding:12px 16px; background: linear-gradient(135deg, #013a4a, #005366); color:#fff; border-top-left-radius:12px; border-top-right-radius:12px;"><strong>⚙️ Valores Base e Configurações</strong></header>
+    <section style="padding:16px; background:#fff; max-height:70vh; overflow:auto;">
+      <div class="toolbar" style="justify-content: space-between;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button type="button" class="btn" data-tab="papeis">Papéis</button>
+          <button type="button" class="btn" data-tab="materiais">Materiais</button>
+          <button type="button" class="btn" data-tab="impressao">Impressão Digital</button>
+          <button type="button" class="btn" data-tab="maoobra">Mão de Obra</button>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button type="button" class="btn" id="btnExport">Exportar JSON</button>
+          <label class="btn">Importar JSON<input type="file" id="fileImport" accept="application/json" style="display:none" /></label>
+        </div>
+      </div>
+      <div id="tab-papeis" class="tab">
+        <p style="color:#55637a">Ordem exigida: <b>A4, A3, Folha, Pacote</b> (editável). Ao alterar, reflete imediatamente nos cálculos e nas exportações.</p>
+        <table id="tblBasePapeis"><thead><tr><th>Nome do Papel</th><th>R$ A4</th><th>R$ A3</th><th>R$ Folha</th><th>R$ Pacote</th><th>Folhas/Pacote</th><th>Ações</th></tr></thead><tbody></tbody></table>
+      </div>
+      <div id="tab-materiais" class="tab" hidden>
+        <table id="tblBaseMateriais"><thead><tr><th>Material</th><th>Tipos (nome → valor)</th><th>Ações</th></tr></thead><tbody></tbody></table>
+      </div>
+      <div id="tab-impressao" class="tab" hidden>
+        <table id="tblBaseImpressao"><thead><tr><th>Tipo</th><th>Formato</th><th>R$ unit.</th><th>Ações</th></tr></thead><tbody></tbody></table>
+      </div>
+      <div id="tab-maoobra" class="tab" hidden>
+        <table id="tblBaseMaoObra"><thead><tr><th>Profissional</th><th>R$ por Hora</th><th>Ações</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+    <footer style="padding:12px 16px; background:#f7f9fb; border-top:1px solid var(--bordas); display:flex; gap:8px; justify-content:flex-end;"><button type="submit" class="btn btn-ok" id="btnSalvarBase">💾 Salvar Alterações</button><button type="button" class="btn" id="btnFecharModal">Fechar</button></footer>
+  </form>
+</dialog>
+
+<script id="BASE_ORIGINAL" type="application/json">{"base": {"papeis": [{"nome": "Adesivo Fosco - 180g", "a4": 0.33, "a3": 0.74, "folha": 2.97, "pacote": 296.64, "folhasPacote": null}, {"nome": "Cartão Triplex - 250g", "a4": 0.35, "a3": 0.79, "folha": 3.17, "pacote": 475.0, "folhasPacote": null}, {"nome": "Cartolina Branca - 180g", "a4": 0.29, "a3": 0.57, "folha": 1.14, "pacote": 114.0, "folhasPacote": null}, {"nome": "Cartolina Branca - 240g", "a4": 0.24, "a3": 0.48, "folha": 0.95, "pacote": 95.0, "folhasPacote": null}, {"nome": "Couché 115g", "a4": 0.09, "a3": 0.19, "folha": 0.77, "pacote": 192.0, "folhasPacote": null}, {"nome": "Couché 150g", "a4": 0.08, "a3": 0.17, "folha": 0.68, "pacote": 169.45, "folhasPacote": null}, {"nome": "Couché 210g", "a4": 0.19, "a3": 0.43, "folha": 1.71, "pacote": 256.69, "folhasPacote": null}, {"nome": "Kraft 110g", "a4": 0.11, "a3": 0.24, "folha": 0.97, "pacote": 241.84, "folhasPacote": null}, {"nome": "Opaline 180g", "a4": 0.19, "a3": 0.42, "folha": 1.68, "pacote": 114.0, "folhasPacote": null}, {"nome": "Offset 75g", "a4": 0.06, "a3": 0.13, "folha": 0.53, "pacote": 132.0, "folhasPacote": null}, {"nome": "Offset 90g", "a4": 0.05, "a3": 0.12, "folha": 0.47, "pacote": 236.71, "folhasPacote": null}, {"nome": "Offset 120g", "a4": 0.09, "a3": 0.2, "folha": 0.8, "pacote": 200.01, "folhasPacote": null}, {"nome": "Vergê 80g", "a4": 0.04, "a3": 0.1, "folha": 0.39, "pacote": 98.64, "folhasPacote": null}, {"nome": "Vergê 180g", "a4": 0.12, "a3": 0.28, "folha": 1.12, "pacote": 139.49, "folhasPacote": null}], "materiais": [{"nome": "Laser Filme", "tipos": [{"nome": "A3 (por folha)", "valor": 3.57}, {"nome": "Ofício II (por folha)", "valor": 1.9}]}, {"nome": "Chapa Offset Positiva", "tipos": [{"nome": "SAKURAI", "valor": 7.58}, {"nome": "HEIDELBERG", "valor": 14.0}]}, {"nome": "Chapa Offset Térmica Digital (CTP)", "tipos": [{"nome": "SAKURAI", "valor": 57.0}, {"nome": "HEIDELBERG", "valor": 54.5}]}, {"nome": "Espiral", "tipos": [{"nome": "7 MM", "valor": 0.11}, {"nome": "9 MM", "valor": 0.13}, {"nome": "12 MM", "valor": 0.28}, {"nome": "14 MM", "valor": 0.36}, {"nome": "17 MM", "valor": 0.44}, {"nome": "20 MM", "valor": 0.64}, {"nome": "23 MM", "valor": 0.75}, {"nome": "25 MM", "valor": 0.98}, {"nome": "29 MM", "valor": 1.25}, {"nome": "33 MM", "valor": 1.52}, {"nome": "40 MM", "valor": 1.7}, {"nome": "45 MM", "valor": 2.37}, {"nome": "50 MM", "valor": 3.16}]}, {"nome": "Capa para Encadernação PP", "tipos": [{"nome": "Transparente", "valor": 0.4}, {"nome": "Preta", "valor": 0.3}]}, {"nome": "Fita Dupla Face", "tipos": [{"nome": "19 MM (por cm)", "valor": 0.005}, {"nome": "25 MM (por cm)", "valor": 0.0043}, {"nome": "50 MM (por cm)", "valor": 0.0086}]}, {"nome": "Bobina Polietileno (Plastificação)", "tipos": [{"nome": "34CM×0,05MM×60M (por cm)", "valor": 0.0342}]}, {"nome": "Adesivo Vinil", "tipos": [{"nome": "Preto (por metro)", "valor": 14.4}, {"nome": "Azul Médio (por metro)", "valor": 15.86}, {"nome": "Vermelho Médio (por metro)", "valor": 18.31}, {"nome": "Transparente (por metro)", "valor": 9.9}]}, {"nome": "Máscara de Transferência", "tipos": [{"nome": "Máscara (por metro)", "valor": 17.11}]}, {"nome": "Bolsa para Pastas", "tipos": [{"nome": "25×11", "valor": 0.27}]}], "impressoes": [{"tipo": "PRETO (1 lado)", "formato": "A4", "valor": 0.03}, {"tipo": "PRETO (1 lado)", "formato": "A3", "valor": 0.06}, {"tipo": "PRETO (FRENTE E VERSO)", "formato": "A4", "valor": 0.06}, {"tipo": "PRETO (FRENTE E VERSO)", "formato": "A3", "valor": 0.12}, {"tipo": "COLORIDO (1 lado)", "formato": "A4", "valor": 0.25}, {"tipo": "COLORIDO (1 lado)", "formato": "A3", "valor": 0.46}, {"tipo": "COLORIDO (FRENTE E VERSO)", "formato": "A4", "valor": 0.5}, {"tipo": "COLORIDO (FRENTE E VERSO)", "formato": "A3", "valor": 0.92}], "maoObra": [{"profissional": "COORDENADOR DE ARTES GRÁFICAS", "hora": 85.67}, {"profissional": "DESIGNER GRÁFICO", "hora": 65.0}, {"profissional": "ORÇAMENTISTA GRÁFICO", "hora": 41.37}, {"profissional": "MESTRE IMPRESSOR", "hora": 53.84}, {"profissional": "IMPRESSOR DIGITAL", "hora": 36.0}, {"profissional": "MESTRE IMPRESSOR OFFSET", "hora": 53.84}, {"profissional": "IMPRESSOR OFFSET", "hora": 36.0}, {"profissional": "OPERADOR DE GUILHOTINA", "hora": 36.0}, {"profissional": "MESTRE DE SERVIÇOS GRÁFICOS", "hora": 53.84}, {"profissional": "OPERADOR DE ACABAMENTO GRÁFICO", "hora": 36.0}, {"profissional": "ENCARREGADO", "hora": 53.84}]}}</script>
+
+<script>
+(function(){
+  const BRL = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+  const fmt = v => BRL.format(Number(v||0));
+  const parseNum = v => { if(typeof v==='number') return v; if(!v) return 0; let s=(''+v).replace(/[^0-9,.-]/g,'').replace('.', '').replace(',', '.'); const n=parseFloat(s); return isNaN(n)?0:n; };
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+  const LS_KEY = 'digra_orcamento_v1';
+  let state = { info:{ qtTotal:1, tec:'DIGITAL', descricao:'', dadosTecnicos:'' }, itens:{ papeis:[], materiais:[], impressoes:[], maoObra:[] }, imagens:[], base:{} };
+  try{ const raw=localStorage.getItem(LS_KEY); if(raw){ state = Object.assign(state, JSON.parse(raw)); } }catch(e){}
+  try{ const obj=JSON.parse(document.getElementById('BASE_ORIGINAL').textContent||'{}'); if(obj.base) state.base=obj.base; }catch(e){}
+  function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+
+  function kpis(){ const tp=state.itens.papeis.reduce((s,r)=>s+r.qtd*r.unit,0); const tm=state.itens.materiais.reduce((s,r)=>s+r.qtd*r.unit,0); const ti=state.itens.impressoes.reduce((s,r)=>s+r.qtd*r.unit,0); const to=state.itens.maoObra.reduce((s,r)=>s+r.minutos*r.minuto,0); const sub=tp+tm+ti+to; const acresc=(state.info.tec==='OFFSET')? sub*0.10 : 0; const total=sub+acresc; const unit= total/Math.max(1, parseNum(state.info.qtTotal));
+    setT('kpiPapeis',fmt(tp)); setT('kpiMateriais',fmt(tm)); setT('kpiImpressao',fmt(ti)); setT('kpiMaoObra',fmt(to)); setT('kpiAcresc',fmt(acresc)); setT('kpiTotal',fmt(total)); setT('kpiUnit',fmt(unit)); setT('stickyTotal',fmt(total)); setT('stickyUnit',fmt(unit)); setT('kpiTec',state.info.tec); setT('rfUnitFinal',fmt(unit)); save(); }
+  function setT(id,val){ const el=document.getElementById(id); if(el) el.textContent=val; }
+
+  // ===== Seleções =====
+  function addLinhaPapel(){ const wrap=document.createElement('div'); wrap.className='selectline'; const selP=document.createElement('select'); selP.innerHTML='<option value="">Selecione o tipo...</option>'+(state.base.papeis||[]).map((p,i)=>`<option value="${i}">${p.nome}</option>`).join(''); const selT=document.createElement('select'); selT.innerHTML='<option value="">Tamanho...</option><option>A4</option><option>A3</option><option>Folha</option><option>Pacote</option>'; const qtd=document.createElement('input'); qtd.type='number'; qtd.min='0'; qtd.placeholder='Qtd'; const unit=document.createElement('input'); unit.type='text'; unit.placeholder='Valor unit.'; unit.readOnly=true; const total=document.createElement('input'); total.type='text'; total.readOnly=true; total.value=fmt(0); const del=document.createElement('button'); del.className='del'; del.textContent='🗑️'; const item={ papel:null, tamanho:null, qtd:0, unit:0 };
+    function recalc(){ total.value=fmt(item.qtd*item.unit); kpis(); }
+    selP.onchange=()=>{ const p=state.base.papeis[parseInt(selP.value)]; item.papel=p? p.nome : null; if(p && item.tamanho){ const u=item.tamanho==='A4'?p.a4:item.tamanho==='A3'?p.a3:item.tamanho==='Pacote'?p.pacote:p.folha; item.unit=parseNum(u); unit.value=fmt(item.unit); recalc(); } };
+    selT.onchange=()=>{ item.tamanho=selT.value||null; const p=state.base.papeis[parseInt(selP.value)]; if(p && item.tamanho){ const u=item.tamanho==='A4'?p.a4:item.tamanho==='A3'?p.a3:item.tamanho==='Pacote'?p.pacote:p.folha; item.unit=parseNum(u); unit.value=fmt(item.unit); recalc(); } };
+    qtd.oninput=()=>{ item.qtd=parseNum(qtd.value); recalc(); };
+    del.onclick=()=>{ wrap.remove(); const i=state.itens.papeis.indexOf(item); if(i>-1) state.itens.papeis.splice(i,1); kpis(); };
+    wrap.append(selP, selT, qtd, unit, total, del); state.itens.papeis.push(item); return wrap; }
+
+  function addLinhaMaterial(){ const wrap=document.createElement('div'); wrap.className='selectline'; const selM=document.createElement('select'); selM.innerHTML='<option value="">Selecione material...</option>'+(state.base.materiais||[]).map((m,i)=>`<option value="${i}">${m.nome}</option>`).join(''); const selTipo=document.createElement('select'); selTipo.innerHTML='<option value="">Selecione o tipo...</option>'; const qtd=document.createElement('input'); qtd.type='number'; qtd.min='0'; qtd.placeholder='Qtd'; const unit=document.createElement('input'); unit.type='text'; unit.placeholder='Valor unit.'; unit.readOnly=true; const total=document.createElement('input'); total.type='text'; total.readOnly=true; total.value=fmt(0); const del=document.createElement('button'); del.className='del'; del.textContent='🗑️'; const item={ material:null, tipo:null, qtd:0, unit:0 };
+    function recalc(){ total.value=fmt(item.qtd*item.unit); kpis(); }
+    selM.onchange=()=>{ const m=state.base.materiais[parseInt(selM.value)]; item.material=m? m.nome:null; selTipo.innerHTML='<option value="">Selecione o tipo...</option>'+((m&&m.tipos)||[]).map((t,i)=>`<option value="${i}">${t.nome}</option>`).join(''); };
+    selTipo.onchange=()=>{ const m=state.base.materiais[parseInt(selM.value)]; const tip=((m&&m.tipos)||[])[parseInt(selTipo.value)]; item.tipo=tip? tip.nome:null; item.unit=parseNum(tip? tip.valor:0); unit.value=fmt(item.unit); recalc(); };
+    qtd.oninput=()=>{ item.qtd=parseNum(qtd.value); recalc(); };
+    del.onclick=()=>{ wrap.remove(); const i=state.itens.materiais.indexOf(item); if(i>-1) state.itens.materiais.splice(i,1); kpis(); };
+    wrap.append(selM, selTipo, qtd, unit, total, del); state.itens.materiais.push(item); return wrap; }
+
+  function addLinhaImpressao(){ const wrap=document.createElement('div'); wrap.className='selectline'; const tipos=[...new Set((state.base.impressoes||[]).map(i=>i.tipo))]; const selTipo=document.createElement('select'); selTipo.innerHTML='<option value="">Selecione o tipo de impressão...</option>'+tipos.map(t=>`<option>${t}</option>`).join(''); const selFormato=document.createElement('select'); selFormato.innerHTML='<option value="">Formato...</option>'; const qtd=document.createElement('input'); qtd.type='number'; qtd.min='0'; qtd.placeholder='Qtd'; const unit=document.createElement('input'); unit.type='text'; unit.placeholder='Valor unitário'; unit.readOnly=true; const total=document.createElement('input'); total.type='text'; total.readOnly=true; total.value=fmt(0); const del=document.createElement('button'); del.className='del'; del.textContent='🗑️'; const item={ tipo:null, formato:null, qtd:0, unit:0 };
+    function recalc(){ total.value=fmt(item.qtd*item.unit); kpis(); }
+    selTipo.onchange=()=>{ const tipo=selTipo.value||null; item.tipo=tipo; const formatos=(state.base.impressoes||[]).filter(i=>i.tipo===tipo).map(i=>i.formato); const uniq=[...new Set(formatos)]; selFormato.innerHTML='<option value="">Formato...</option>'+uniq.map(f=>`<option>${f}</option>`).join(''); };
+    selFormato.onchange=()=>{ const reg=(state.base.impressoes||[]).find(i=>i.tipo===item.tipo && i.formato===selFormato.value); item.formato=selFormato.value||null; item.unit=parseNum(reg? reg.valor:0); unit.value=fmt(item.unit); recalc(); };
+    qtd.oninput=()=>{ item.qtd=parseNum(qtd.value); recalc(); };
+    del.onclick=()=>{ wrap.remove(); const i=state.itens.impressoes.indexOf(item); if(i>-1) state.itens.impressoes.splice(i,1); kpis(); };
+    wrap.append(selTipo, selFormato, qtd, unit, total, del); state.itens.impressoes.push(item); return wrap; }
+
+  function addLinhaMaoObra(){ const wrap=document.createElement('div'); wrap.className='selectline'; const sel=document.createElement('select'); sel.innerHTML='<option value="">Profissional...</option>'+(state.base.maoObra||[]).map((o,i)=>`<option value="${i}">${o.profissional}</option>`).join(''); const spacer=document.createElement('div'); spacer.style.visibility='hidden'; spacer.textContent='—'; const minutos=document.createElement('input'); minutos.type='number'; minutos.min='0'; minutos.placeholder='Minutos'; const unit=document.createElement('input'); unit.type='text'; unit.placeholder='R$ / minuto'; unit.readOnly=true; const total=document.createElement('input'); total.type='text'; total.readOnly=true; total.value=fmt(0); const del=document.createElement('button'); del.className='del'; del.textContent='🗑️'; const item={ prof:null, minutos:0, minuto:0 };
+    function recalc(){ total.value=fmt(item.minutos*item.minuto); kpis(); }
+    sel.onchange=()=>{ const o=state.base.maoObra[parseInt(sel.value)]; item.prof=o? o.profissional:null; item.minuto=parseNum(o? o.hora:0)/60; unit.value=fmt(item.minuto); recalc(); };
+    minutos.oninput=()=>{ item.minutos=parseNum(minutos.value); recalc(); };
+    del.onclick=()=>{ wrap.remove(); const i=state.itens.maoObra.indexOf(item); if(i>-1) state.itens.maoObra.splice(i,1); kpis(); };
+    wrap.append(sel, spacer, minutos, unit, total, del); state.itens.maoObra.push(item); return wrap; }
+
+  // Binds
+  document.getElementById('btnAddPapel').onclick=()=>document.getElementById('areaPapeis').appendChild(addLinhaPapel());
+  document.getElementById('btnAddMaterial').onclick=()=>document.getElementById('areaMateriais').appendChild(addLinhaMaterial());
+  document.getElementById('btnAddImpressao').onclick=()=>document.getElementById('areaImpressao').appendChild(addLinhaImpressao());
+  document.getElementById('btnAddMaoObra').onclick=()=>document.getElementById('areaMaoObra').appendChild(addLinhaMaoObra());
+
+  // Tecnologia
+  const aviso=document.getElementById('tecAviso'), off=document.getElementById('btnOffset'), dig=document.getElementById('btnDigital');
+  function setTec(t){ state.info.tec=t; off.classList.toggle('active', t==='OFFSET'); dig.classList.toggle('active', t==='DIGITAL'); aviso.classList.add('show'); if(t==='OFFSET'){ aviso.textContent='Tecnologia Offset — acréscimo de 10% aplicado'; aviso.style.background='#fff3cd'; aviso.style.color='#7a5c00'; } else { aviso.textContent='Tecnologia Digital — isento dos 10%'; aviso.style.background='#d1fae5'; aviso.style.color='#065f46'; } kpis(); }
+  off.onclick=()=>setTec('OFFSET'); dig.onclick=()=>setTec('DIGITAL');
+
+  // Inputs iniciais
+  document.getElementById('qtTotal').oninput=e=>{ state.info.qtTotal=parseNum(e.target.value)||1; kpis(); };
+  document.getElementById('descricao').oninput=e=>{ state.info.descricao=e.target.value; save(); };
+  document.getElementById('dadosTecnicos').oninput=e=>{ state.info.dadosTecnicos=e.target.value; save(); };
+
+  // Imagens
+  const dz=document.getElementById('dropzone'); const fs=document.getElementById('fileSelect'); const thumbs=document.getElementById('thumbs');
+  let pasteActive=false;
+  function toBase64(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onerror=rej; fr.onload=()=>res(fr.result); fr.readAsDataURL(file); }); }
+  async function addImageFile(file){ if(!file || !file.type || !file.type.startsWith('image/')) return; const b64 = await toBase64(file); state.imagens.push(b64); renderThumbs(); save(); }
+  function renderThumbs(){ thumbs.innerHTML=''; (state.imagens||[]).forEach((src,idx)=>{ const d=document.createElement('div'); d.className='thumb'; const img=document.createElement('img'); img.src=src; d.appendChild(img); const rm=document.createElement('button'); rm.className='remove'; rm.textContent='✕'; rm.onclick=()=>{ state.imagens.splice(idx,1); renderThumbs(); save(); }; d.appendChild(rm); thumbs.appendChild(d); }); }
+  dz.addEventListener('click', ()=>{ pasteActive=true; fs.click(); });
+  fs.onchange=e=>{ const files=[...e.target.files]; files.forEach(addImageFile); fs.value=''; };
+  document.addEventListener('paste', e=>{ if(!pasteActive) return; const items=e.clipboardData && e.clipboardData.items; if(!items) return; for(const it of items){ if(it.kind==='file'){ addImageFile(it.getAsFile()); } } });
+
+  // Modal Valores Base
+  const modal=document.getElementById('modalBase');
+  function abrirValoresBase(){ renderBaseTables(); modal.showModal(); }
+  function renderBaseTables(){
+    const tbp=document.querySelector('#tblBasePapeis tbody'); tbp.innerHTML=''; (state.base.papeis||[]).forEach((r,idx)=>{ const tr=document.createElement('tr'); ['nome','a4','a3','folha','pacote','folhasPacote'].forEach(k=>{ const td=document.createElement('td'); const inp=document.createElement('input'); inp.value=r[k]??''; inp.type=(k==='nome')?'text':'number'; if(k!=='nome') inp.step='0.01'; inp.oninput=()=>{ r[k]=(k==='nome')?inp.value:parseNum(inp.value); save(); kpis(); }; td.appendChild(inp); tr.appendChild(td); }); const tdA=document.createElement('td'); const del=document.createElement('button'); del.className='btn'; del.textContent='Excluir'; del.onclick=()=>{ state.base.papeis.splice(idx,1); renderBaseTables(); save(); }; tdA.appendChild(del); tr.appendChild(tdA); tbp.appendChild(tr); });
+    const tbm=document.querySelector('#tblBaseMateriais tbody'); tbm.innerHTML=''; (state.base.materiais||[]).forEach((r,idx)=>{ const tr=document.createElement('tr'); const tdMat=document.createElement('td'); const inpMat=document.createElement('input'); inpMat.value=r.nome||''; inpMat.oninput=()=>{ r.nome=inpMat.value; save(); }; tdMat.appendChild(inpMat); const tdTipos=document.createElement('td'); const wrap=document.createElement('div'); (r.tipos||[]).forEach((t,i)=>{ const row=document.createElement('div'); row.style.display='grid'; row.style.gridTemplateColumns='1fr 120px 80px'; row.style.gap='6px'; row.style.margin='6px 0'; const n=document.createElement('input'); n.placeholder='Nome'; n.value=t.nome||''; n.oninput=()=>{ t.nome=n.value; save(); }; const v=document.createElement('input'); v.type='number'; v.step='0.01'; v.placeholder='R$'; v.value=t.valor||0; v.oninput=()=>{ t.valor=parseNum(v.value); save(); }; const rm=document.createElement('button'); rm.className='btn'; rm.textContent='-'; rm.onclick=()=>{ r.tipos.splice(i,1); renderBaseTables(); save(); }; row.append(n,v,rm); wrap.appendChild(row); }); const addT=document.createElement('button'); addT.className='btn btn-primary'; addT.textContent='+ Tipo'; addT.onclick=()=>{ (r.tipos=r.tipos||[]).push({nome:'',valor:0}); renderBaseTables(); save(); }; tdTipos.append(wrap, addT); const tdA=document.createElement('td'); const del=document.createElement('button'); del.className='btn'; del.textContent='Excluir'; del.onclick=()=>{ state.base.materiais.splice(idx,1); renderBaseTables(); save(); }; tr.append(tdMat, tdTipos, tdA); tdA.appendChild(del); tbm.appendChild(tr); });
+    const tbi=document.querySelector('#tblBaseImpressao tbody'); tbi.innerHTML=''; (state.base.impressoes||[]).forEach((r,idx)=>{ const tr=document.createElement('tr'); const tipo=document.createElement('input'); tipo.value=r.tipo||''; tipo.oninput=()=>{ r.tipo=tipo.value; save(); }; const formato=document.createElement('input'); formato.value=r.formato||''; formato.oninput=()=>{ r.formato=formato.value; save(); }; const val=document.createElement('input'); val.type='number'; val.step='0.01'; val.value=r.valor||0; val.oninput=()=>{ r.valor=parseNum(val.value); save(); }; const tdA=document.createElement('td'); const del=document.createElement('button'); del.className='btn'; del.textContent='Excluir'; del.onclick=()=>{ state.base.impressoes.splice(idx,1); renderBaseTables(); save(); }; tr.append(document.createElement('td'), document.createElement('td'), document.createElement('td'), tdA); tr.children[0].appendChild(tipo); tr.children[1].appendChild(formato); tr.children[2].appendChild(val); tdA.appendChild(del); tbi.appendChild(tr); });
+    const tbo=document.querySelector('#tblBaseMaoObra tbody'); tbo.innerHTML=''; (state.base.maoObra||[]).forEach((r,idx)=>{ const tr=document.createElement('tr'); const prof=document.createElement('input'); prof.value=r.profissional||''; prof.oninput=()=>{ r.profissional=prof.value; save(); }; const hora=document.createElement('input'); hora.type='number'; hora.step='0.01'; hora.value=r.hora||0; hora.oninput=()=>{ r.hora=parseNum(hora.value); save(); }; const tdA=document.createElement('td'); const del=document.createElement('button'); del.className='btn'; del.textContent='Excluir'; del.onclick=()=>{ state.base.maoObra.splice(idx,1); renderBaseTables(); save(); }; tr.append(document.createElement('td'), document.createElement('td'), tdA); tr.children[0].appendChild(prof); tr.children[1].appendChild(hora); tdA.appendChild(del); tbo.appendChild(tr); });
+  }
+  document.getElementById('btnFecharModal').onclick=()=>modal.close();
+  document.getElementById('btnSalvarBase').onclick=()=>{ save(); modal.close(); kpis(); };
+  $$('#modalBase .btn[data-tab]').forEach(btn=>btn.onclick=()=>{ ['papeis','materiais','impressao','maoobra'].forEach(t=>{ document.getElementById('tab-'+t).hidden=(t!==btn.dataset.tab); }); });
+  document.getElementById('btnExport').onclick=()=>{ const blob=new Blob([ JSON.stringify(state.base, null, 2) ], {type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='valores-base.json'; a.click(); };
+  document.getElementById('fileImport').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const fr=new FileReader(); fr.onload=()=>{ try{ const obj=JSON.parse(fr.result); if(obj && (obj.papeis||obj.materiais||obj.impressoes||obj.maoObra)){ state.base=obj; save(); renderBaseTables(); kpis(); } }catch(err){} }; fr.readAsText(f); };
+
+  document.getElementById('btnPrint').onclick=()=>window.print();
+  document.getElementById('btnPrint2').onclick=()=>window.print();
+  document.getElementById('btnEditBase').onclick=()=>abrirValoresBase();
+  document.getElementById('btnEditBase2').onclick=()=>abrirValoresBase();
+
+  kpis();
+})();
+</script>
 </body>
 </html>
